@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  cyber-platform:
+    build: .
+    ports:
+      - "8080:8080"
+      - "8081:8081"  # WebSocket port
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - WS_PORT=8081
+    restart: unless-stopped
+    networks:
+      - cyber-network
+
+  # Optional: Include a sample container for testing
+  nginx-test:
+    image: nginx:alpine
+    ports:
+      - "8082:80"
+    networks:
+      - cyber-network
+    profiles:
+      - test
+
+networks:
+  cyber-network:
+    driver: bridge

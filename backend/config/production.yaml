@@ -1,0 +1,36 @@
+# Production Configuration
+server:
+  port: 8080
+  host: "0.0.0.0"
+  ssl_enabled: false
+  ssl_cert: ""
+  ssl_key: ""
+
+database:
+  path: "./data/cyber-platform.db"
+
+docker:
+  host: "unix:///var/run/docker.sock"
+  api_version: "1.41"
+
+security:
+  jwt_secret: "your-super-secret-jwt-key-change-this-in-production"
+  jwt_expiry: "24h"
+  bcrypt_cost: 12
+  max_login_attempts: 5
+  lockout_duration: "15m"
+
+logging:
+  level: "info"
+  file: "./logs/cyber-platform.log"
+  max_size: 100
+  max_backups: 3
+  max_age: 28
+
+rate_limiting:
+  requests_per_minute: 100
+  burst_size: 20
+
+monitoring:
+  metrics_enabled: true
+  health_check_interval: "30s"
