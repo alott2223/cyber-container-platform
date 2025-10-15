@@ -13,6 +13,7 @@
 [![Demo](https://img.shields.io/badge/🎮-Live%20Demo-ff6b6b?style=for-the-badge)](https://cyber-container-platform.demo.com)
 [![Documentation](https://img.shields.io/badge/📚-Documentation-4ecdc4?style=for-the-badge)](./docs)
 [![Contributing](https://img.shields.io/badge/🤝-Contributing-45b7d1?style=for-the-badge)](./CONTRIBUTING.md)
+[![Tests](https://img.shields.io/badge/🧪-Tests-00ff00?style=for-the-badge)](https://github.com/alott2223/cyber-container-platform/actions)
 
 </div>
 
