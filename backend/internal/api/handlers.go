@@ -596,6 +596,14 @@ func sanitizeString(input string) string {
 	input = strings.ReplaceAll(input, "\n", "")
 	input = strings.ReplaceAll(input, "\t", "")
 	input = strings.ReplaceAll(input, "\x00", "") // Remove null bytes
+	
+	// Additional security: remove any remaining control characters
+	for i := 0; i < len(input); i++ {
+		if input[i] < 32 && input[i] != 9 && input[i] != 10 && input[i] != 13 {
+			input = strings.ReplaceAll(input, string(input[i]), "")
+		}
+	}
+	
 	return input
 }
 
