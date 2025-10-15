@@ -13,6 +13,7 @@ type Config struct {
 	SSLEnabled   bool
 	CertPath     string
 	KeyPath      string
+	LogLevel     string
 }
 
 func Load() *Config {
@@ -24,6 +25,7 @@ func Load() *Config {
 		SSLEnabled:   getBoolEnv("SSL_ENABLED", false),
 		CertPath:     getEnv("CERT_PATH", "./certs/server.crt"),
 		KeyPath:      getEnv("KEY_PATH", "./certs/server.key"),
+		LogLevel:     getEnv("LOG_LEVEL", "info"),
 	}
 }
 
