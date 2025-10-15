@@ -2,6 +2,9 @@ import { useAuthStore } from '@/stores/authStore'
 
 const API_BASE_URL = 'http://localhost:8080/api/v1'
 
+// Add request timeout
+const REQUEST_TIMEOUT = 10000 // 10 seconds
+
 class ApiClient {
   private getAuthHeaders(): HeadersInit {
     const token = useAuthStore.getState().token
