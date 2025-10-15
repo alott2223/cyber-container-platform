@@ -71,6 +71,9 @@ export function ContainerCard({ container, onStart, onStop, onRemove, isLoading 
         <div className="flex items-center space-x-2 ml-2">
           <div className={`status-indicator ${getStatusColor(container.state)} animate-pulse`}></div>
           <span className="text-xs text-gray-400">{getStatusText(container.state)}</span>
+          {container.state === 'running' && (
+            <span className="text-xs text-green-400">●</span>
+          )}
         </div>
 
         {/* Menu */}
