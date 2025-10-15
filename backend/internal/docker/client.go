@@ -228,3 +228,8 @@ func (c *Client) GetContainerStats(id string) (types.ContainerStats, error) {
 func (c *Client) ListImages() ([]types.ImageSummary, error) {
 	return c.cli.ImageList(context.Background(), types.ImageListOptions{})
 }
+
+// GetSystemInfo returns Docker system information
+func (c *Client) GetSystemInfo() (types.Info, error) {
+	return c.cli.Info(context.Background())
+}
