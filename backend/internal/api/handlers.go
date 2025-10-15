@@ -585,6 +585,7 @@ func sanitizeString(input string) string {
 	input = strings.ReplaceAll(input, "\r", "")
 	input = strings.ReplaceAll(input, "\n", "")
 	input = strings.ReplaceAll(input, "\t", "")
+	input = strings.ReplaceAll(input, "\x00", "") // Remove null bytes
 	return input
 }
 
