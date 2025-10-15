@@ -224,3 +224,7 @@ func (c *Client) RemoveVolume(name string) error {
 func (c *Client) GetContainerStats(id string) (types.ContainerStats, error) {
 	return c.cli.ContainerStats(context.Background(), id, false)
 }
+
+func (c *Client) ListImages() ([]types.ImageSummary, error) {
+	return c.cli.ImageList(context.Background(), types.ImageListOptions{})
+}

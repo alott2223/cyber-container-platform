@@ -153,6 +153,13 @@ func (s *Server) setupRouter() {
 			templates.PUT("/:id", s.updateTemplate)
 			templates.DELETE("/:id", s.deleteTemplate)
 		}
+
+		// Images
+		images := api.Group("/images")
+		images.Use(s.authMiddleware())
+		{
+			images.GET("", s.listImages)
+		}
 	}
 
 	// Serve frontend (for production builds)

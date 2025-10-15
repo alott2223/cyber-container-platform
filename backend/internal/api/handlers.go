@@ -536,6 +536,16 @@ func (s *Server) deleteTemplate(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Template deleted successfully"})
 }
 
+func (s *Server) listImages(c *gin.Context) {
+	images, err := s.dockerClient.ListImages()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"images": images})
+}
+
 // Validation helper functions
 func isValidContainerName(name string) bool {
 	// Docker container name validation: alphanumeric, hyphens, underscores, 1-63 chars
