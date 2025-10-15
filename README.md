@@ -22,6 +22,8 @@
 
 Imagine having **Docker Desktop** and **Portainer** combined, but better - with a sleek cyberpunk interface, real-time monitoring, and zero cloud dependency. That's exactly what Cyber Container Platform delivers.
 
+> **Note**: This platform is actively maintained by a dedicated team of developers passionate about container management and cyberpunk aesthetics.
+
 Built for developers who want **full control** over their containerized applications without relying on external services. Whether you're running a home lab, managing development environments, or need a lightweight alternative to heavy container platforms, this is your solution.
 
 ### 🎯 Why Choose Cyber Container Platform?
