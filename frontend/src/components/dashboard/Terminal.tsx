@@ -35,6 +35,9 @@ export function Terminal() {
 
     setIsExecuting(true)
     
+    // Add command to history (for future up/down arrow support)
+    // TODO: Implement command history
+    
     // Add command to output
     setOutput(prev => [...prev, `cyber@terminal:~$ ${command}`])
 
