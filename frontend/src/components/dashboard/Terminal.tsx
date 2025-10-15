@@ -37,10 +37,11 @@ export function Terminal() {
     setTimeout(() => {
       let result = ''
       switch (command.trim()) {
-        case 'docker ps':
-          result = `CONTAINER ID   IMAGE     COMMAND                  CREATED        STATUS        PORTS     NAMES
-93b3b478f5a4   nginx     "/docker-entrypoint.…"   2 hours ago   Up 2 hours   80/tcp    nginx-web
-19f0473b2e9a   redis     "docker-entrypoint.s…"   1 hour ago    Up 1 hour    6379/tcp  redis-cache`
+                case 'docker ps':
+                  result = `CONTAINER ID   IMAGE     COMMAND                  CREATED        STATUS        PORTS     NAMES
+        93b3b478f5a4   nginx     "/docker-entrypoint.…"   2 hours ago   Up 2 hours   80/tcp    nginx-web
+        19f0473b2e9a   redis     "docker-entrypoint.s…"   1 hour ago    Up 1 hour    6379/tcp  redis-cache
+        a1b2c3d4e5f6   postgres  "docker-entrypoint.s…"   30 min ago    Up 30 min    5432/tcp  postgres-db`
           break
         case 'docker images':
           result = `REPOSITORY   TAG       IMAGE ID       CREATED        SIZE
