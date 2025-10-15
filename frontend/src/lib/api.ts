@@ -5,6 +5,10 @@ const API_BASE_URL = 'http://localhost:8080/api/v1'
 // Add request timeout
 const REQUEST_TIMEOUT = 10000 // 10 seconds
 
+// Add retry mechanism for failed requests
+const MAX_RETRIES = 3
+const RETRY_DELAY = 1000 // 1 second
+
 class ApiClient {
   private getAuthHeaders(): HeadersInit {
     const token = useAuthStore.getState().token
