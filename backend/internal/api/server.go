@@ -90,6 +90,7 @@ func (s *Server) setupRouter() {
 			"timestamp": time.Now().Unix(),
 			"version":   "1.0.0",
 			"uptime":    time.Since(time.Unix(1697123456, 0)).Seconds(),
+			"go_version": "1.24.0",
 		})
 	})
 
