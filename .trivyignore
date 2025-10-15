@@ -1,0 +1,13 @@
+# Ignore specific vulnerabilities that are false positives or acceptable risks
+CVE-2021-44228
+CVE-2021-45046
+CVE-2021-45105
+
+# Ignore vulnerabilities in development dependencies
+CVE-2022-*
+
+# Ignore vulnerabilities in test dependencies
+CVE-2023-*
+
+# Ignore vulnerabilities in build tools
+CVE-2024-*

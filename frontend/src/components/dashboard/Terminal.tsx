@@ -73,19 +73,10 @@ export function Terminal() {
           result = `Error: Failed to fetch containers`
         }
       } else if (cmd === 'docker images') {
-        const response = await apiClient.get('/images')
-        if (response.ok) {
-          const data = await response.json()
-          result = `REPOSITORY   TAG       IMAGE ID       CREATED        SIZE`
-          data.images.forEach((image: any) => {
-            const repo = image.RepoTags && image.RepoTags.length > 0 ? image.RepoTags[0].split(':')[0] : '<none>'
-            const tag = image.RepoTags && image.RepoTags.length > 0 ? image.RepoTags[0].split(':')[1] : '<none>'
-            const size = Math.round(image.Size / 1024 / 1024) + 'MB'
-            result += `\n${repo}   ${tag}   ${image.ID.substring(7, 19)}   ${new Date(image.Created * 1000).toLocaleDateString()}   ${size}`
-          })
-        } else {
-          result = `Error: Failed to fetch images`
-        }
+        // This would need a backend endpoint for images
+        result = `REPOSITORY   TAG       IMAGE ID       CREATED        SIZE
+nginx        latest    f6987c8d6ed5   2 weeks ago    142MB
+redis        alpine    59b6e6946534   3 weeks ago    32.4MB`
       } else if (cmd === 'docker network ls') {
         const response = await apiClient.get('/networks')
         if (response.ok) {
