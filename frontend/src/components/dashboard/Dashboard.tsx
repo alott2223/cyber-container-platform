@@ -11,7 +11,7 @@ import { Terminal } from './Terminal'
 import { Metrics } from './Metrics'
 import { Settings } from './Settings'
 
-type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'settings'
+export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'settings'
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('containers')

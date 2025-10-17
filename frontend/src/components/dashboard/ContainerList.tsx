@@ -18,7 +18,7 @@ import { ContainerCard } from './ContainerCard'
 import { CreateContainerModal } from './CreateContainerModal'
 import { apiClient } from '@/lib/api'
 
-interface Container {
+export interface Container {
   id: string
   name: string
   image: string
