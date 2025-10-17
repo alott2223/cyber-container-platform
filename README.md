@@ -10,7 +10,6 @@
 
 *A modern, self-hosted container management platform with a cyberpunk-inspired interface*
 
-[![Demo](https://img.shields.io/badge/🎮-Live%20Demo-ff6b6b?style=for-the-badge)](https://cyber-container-platform.demo.com)
 [![Documentation](https://img.shields.io/badge/📚-Documentation-4ecdc4?style=for-the-badge)](./docs)
 [![Contributing](https://img.shields.io/badge/🤝-Contributing-45b7d1?style=for-the-badge)](./CONTRIBUTING.md)
 [![Tests](https://img.shields.io/badge/🧪-Tests-00ff00?style=for-the-badge)](https://github.com/alott2223/cyber-container-platform/actions)
@@ -44,18 +43,20 @@ Built for developers who want **full control** over their containerized applicat
 <div align="center">
 
 ### Dashboard Overview
-![Dashboard](docs/screenshots/dashboard.png)
+![Dashboard](https://via.placeholder.com/800x400/0a0a0a/00ffff?text=Dashboard+Overview)
 
 ### Container Management
-![Containers](docs/screenshots/containers.png)
+![Containers](https://via.placeholder.com/800x400/0a0a0a/ff6b6b?text=Container+Management)
 
 ### Real-time Terminal
-![Terminal](docs/screenshots/terminal.png)
+![Terminal](https://via.placeholder.com/800x400/0a0a0a/00ff00?text=Terminal+Interface)
 
 ### Network Visualization
-![Networks](docs/screenshots/networks.png)
+![Networks](https://via.placeholder.com/800x400/0a0a0a/ffdd00?text=Network+Management)
 
 </div>
+
+> **Note**: Screenshots show placeholder images. Run the application locally to see the actual cyberpunk-themed interface.
 
 ---
 
