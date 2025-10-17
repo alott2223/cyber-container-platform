@@ -43,16 +43,16 @@ Built for developers who want **full control** over their containerized applicat
 <div align="center">
 
 ### Dashboard Overview
-![Dashboard](https://via.placeholder.com/800x400/0a0a0a/00ffff?text=Dashboard+Overview)
+![Dashboard](./.github/screenshots/dashboard-overview.png)
 
 ### Container Management
-![Containers](https://via.placeholder.com/800x400/0a0a0a/ff6b6b?text=Container+Management)
+![Containers](./.github/screenshots/container-management.png)
 
 ### Real-time Terminal
-![Terminal](https://via.placeholder.com/800x400/0a0a0a/00ff00?text=Terminal+Interface)
+![Terminal](./.github/screenshots/terminal-interface.png)
 
 ### Network Visualization
-![Networks](https://via.placeholder.com/800x400/0a0a0a/ffdd00?text=Network+Management)
+![Networks](./.github/screenshots/network-management.png)
 
 </div>
 
