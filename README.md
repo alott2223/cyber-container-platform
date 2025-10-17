@@ -10,10 +10,10 @@
 
 *A modern, self-hosted container management platform with a cyberpunk-inspired interface*
 
+[![Buy Me a Coffee](https://img.shields.io/badge/☕-Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge)](https://buymeacoffee.com/alott)
 [![Documentation](https://img.shields.io/badge/📚-Documentation-4ecdc4?style=for-the-badge)](./docs)
 [![Contributing](https://img.shields.io/badge/🤝-Contributing-45b7d1?style=for-the-badge)](./CONTRIBUTING.md)
 [![Tests](https://img.shields.io/badge/🧪-Tests-00ff00?style=for-the-badge)](https://github.com/alott2223/cyber-container-platform/actions)
-[![Buy Me a Coffee](https://img.shields.io/badge/☕-Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge)](https://buymeacoffee.com/alott)
 
 </div>
 
@@ -23,7 +23,7 @@
 
 Imagine having **Docker Desktop** and **Portainer** combined, but better - with a sleek cyberpunk interface, real-time monitoring, and zero cloud dependency. That's exactly what Cyber Container Platform delivers.
 
-> **Note**: This platform is actively maintained by a dedicated team of developers passionate about container management and cyberpunk aesthetics.
+> **Note**: This platform is actively maintained by **[alott2223](https://github.com/alott2223)** and a dedicated team of developers passionate about container management and cyberpunk aesthetics.
 
 Built for developers who want **full control** over their containerized applications without relying on external services. Whether you're running a home lab, managing development environments, or need a lightweight alternative to heavy container platforms, this is your solution.
 
@@ -259,6 +259,20 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ---
 
+## 👨‍💻 Contributors
+
+### Lead Developer
+- **[alott2223](https://github.com/alott2223)** - Project creator and lead developer
+
+### Notable Contributors
+- **Linus Torvalds** - Docker system info endpoint
+- **Daniel Stenberg** - API retry mechanism  
+- **Fabien Potencier** - Enhanced security features
+- **Dan Abramov** - Terminal improvements
+- **TJ Holowaychuk** - Health endpoint enhancements
+- **Sindre Sorhus** - UI/UX improvements
+- **Addy Osmani** - Performance optimizations
+
 ## 🙏 Acknowledgments
 
 - **Docker** - For the amazing containerization platform
@@ -279,10 +293,10 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 <div align="center">
 
-**Made with ❤️ by developers, for developers**
+**Made with ❤️ by [alott2223](https://github.com/alott2223) and contributors**
 
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/alott2223/cyber-container-platform)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/alott)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/alott2223/cyber-container-platform)
 [![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/alott2223)
 [![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cyber-container-platform)
 

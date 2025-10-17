@@ -166,9 +166,12 @@ docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 - Security hardening
 - Performance optimizations
 
-## 🙏 Acknowledgments
+## 👨‍💻 Contributors
 
-### Contributors
+### Lead Developer
+- **[alott2223](https://github.com/alott2223)** - Project creator and lead developer
+
+### Notable Contributors
 - **Linus Torvalds**: Docker system info endpoint
 - **Daniel Stenberg**: API retry mechanism
 - **Fabien Potencier**: Enhanced security features
@@ -176,6 +179,8 @@ docker-compose -f docker-compose.test.yml up --abort-on-container-exit
 - **TJ Holowaychuk**: Health endpoint enhancements
 - **Sindre Sorhus**: UI/UX improvements
 - **Addy Osmani**: Performance optimizations
+
+## 🙏 Acknowledgments
 
 ### Technologies Used
 - **Backend**: Go, Gin, Docker API, SQLite, JWT
