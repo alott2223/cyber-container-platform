@@ -9,6 +9,8 @@ export function Terminal() {
   const [currentCommand, setCurrentCommand] = useState('')
   const [output, setOutput] = useState<string[]>([])
   const [isExecuting, setIsExecuting] = useState(false)
+  const [commandHistory, setCommandHistory] = useState<string[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
 
   useEffect(() => {
     // Initialize terminal
@@ -35,8 +37,9 @@ export function Terminal() {
 
     setIsExecuting(true)
     
-    // Add command to history (for future up/down arrow support)
-    // TODO: Implement command history
+    // Add command to history
+    setCommandHistory(prev => [...prev, command])
+    setHistoryIndex(-1)
     
     // Add command to output
     setOutput(prev => [...prev, `cyber@terminal:~$ ${command}`])
@@ -119,6 +122,25 @@ redis        alpine    59b6e6946534   3 weeks ago    32.4MB`
     if (e.key === 'Enter') {
       executeCommand(currentCommand)
       setCurrentCommand('')
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (commandHistory.length > 0) {
+        const newIndex = historyIndex === -1 ? commandHistory.length - 1 : Math.max(0, historyIndex - 1)
+        setHistoryIndex(newIndex)
+        setCurrentCommand(commandHistory[newIndex])
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (historyIndex !== -1) {
+        if (historyIndex === commandHistory.length - 1) {
+          setHistoryIndex(-1)
+          setCurrentCommand('')
+        } else {
+          const newIndex = historyIndex + 1
+          setHistoryIndex(newIndex)
+          setCurrentCommand(commandHistory[newIndex])
+        }
+      }
     }
   }
 

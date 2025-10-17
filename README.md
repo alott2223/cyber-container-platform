@@ -7,6 +7,10 @@
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?style=for-the-badge&logo=go&logoColor=white)
 ![React](https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Stars](https://img.shields.io/github/stars/alott2223/cyber-container-platform?style=for-the-badge&logo=github&color=yellow)
+![Forks](https://img.shields.io/github/forks/alott2223/cyber-container-platform?style=for-the-badge&logo=github&color=blue)
+![Issues](https://img.shields.io/github/issues/alott2223/cyber-container-platform?style=for-the-badge&logo=github&color=red)
+![Last Commit](https://img.shields.io/github/last-commit/alott2223/cyber-container-platform?style=for-the-badge&logo=github&color=purple)
 
 *A modern, self-hosted container management platform with a cyberpunk-inspired interface*
 
@@ -35,6 +39,21 @@ Built for developers who want **full control** over their containerized applicat
 - **🛠️ Developer Friendly**: Terminal integration, real-time metrics, and intuitive controls
 - **🚀 Production Ready**: Security hardened, error handling, and deployment scripts included
 - **📱 Responsive**: Works perfectly on desktop, tablet, and mobile devices
+
+### 📊 Comparison with Alternatives
+
+| Feature | Cyber Container Platform | Docker Desktop | Portainer | Rancher |
+|---------|-------------------------|----------------|-----------|---------|
+| **Open Source** | ✅ MIT License | ⚠️ Limited | ✅ CE Available | ✅ Apache 2.0 |
+| **Self-Hosted** | ✅ 100% Local | ❌ Cloud Required | ✅ Yes | ✅ Yes |
+| **Cyberpunk UI** | ✅ Unique Theme | ❌ Standard | ❌ Basic | ❌ Corporate |
+| **Terminal Integration** | ✅ Built-in | ❌ External | ⚠️ Limited | ⚠️ Limited |
+| **JWT Auth** | ✅ Enterprise | ❌ Basic | ⚠️ RBAC | ✅ Advanced |
+| **Real-time Metrics** | ✅ Live Dashboard | ⚠️ Basic | ✅ Yes | ✅ Yes |
+| **Lightweight** | ✅ < 100MB | ❌ Heavy | ⚠️ Medium | ❌ Heavy |
+| **Easy Setup** | ✅ 3 Commands | ⚠️ Installer | ⚠️ Complex | ❌ Complex |
+| **Resource Usage** | ✅ Minimal | ❌ High | ⚠️ Medium | ❌ Very High |
+| **Customizable** | ✅ Fully | ❌ Limited | ⚠️ Limited | ⚠️ Limited |
 
 ---
 
@@ -73,7 +92,7 @@ Make sure you have these installed:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/cyber-container-platform.git
+   git clone https://github.com/alott2223/cyber-container-platform.git
    cd cyber-container-platform
    ```
 
@@ -91,6 +110,33 @@ Make sure you have these installed:
    - Login with `admin` / `admin` (change these immediately!)
 
 That's it! 🎉 Your container management platform is now running.
+
+### ⚡ Quick Examples
+
+**Create a container:**
+```bash
+# Using the terminal in the UI
+docker run -d --name my-nginx -p 8080:80 nginx:alpine
+
+# Or use the API
+curl -X POST http://localhost:8080/api/v1/containers \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-nginx",
+    "image": "nginx:alpine",
+    "ports": {"8080": "80"}
+  }'
+```
+
+**Monitor containers:**
+```bash
+# View real-time metrics
+curl http://localhost:8080/api/v1/containers | jq
+
+# Check system health
+curl http://localhost:8080/health
+```
 
 ---
 
@@ -211,12 +257,15 @@ cyber-container-platform/
 
 ## 📚 Documentation
 
+- **[Quick Start Guide](./QUICKSTART.md)** ⚡ - Get started in 5 minutes
 - **[Installation Guide](./docs/installation.md)** - Detailed setup instructions
 - **[Configuration](./docs/configuration.md)** - Configuration options
 - **[API Reference](./docs/api.md)** - REST API documentation
-- **[Security](./docs/security.md)** - Security best practices
-- **[Deployment](./docs/deployment.md)** - Production deployment
-- **[Troubleshooting](./docs/troubleshooting.md)** - Common issues and solutions
+- **[Keyboard Shortcuts](./docs/keyboard-shortcuts.md)** - Productivity shortcuts
+- **[Roadmap](./ROADMAP.md)** - Future features and timeline
+- **[Changelog](./CHANGELOG.md)** - Version history and changes
+- **[Security](./SECURITY.md)** - Security best practices
+- **[Production Deployment](./README-PRODUCTION.md)** - Production deployment guide
 
 ---
 
@@ -247,9 +296,65 @@ See our [Contributing Guide](./CONTRIBUTING.md) for more details.
 
 Found a bug or have an idea for a new feature? We'd love to hear from you!
 
-- **🐛 Bug Reports**: [Open an issue](https://github.com/yourusername/cyber-container-platform/issues/new?template=bug_report.md)
-- **💡 Feature Requests**: [Open an issue](https://github.com/yourusername/cyber-container-platform/issues/new?template=feature_request.md)
-- **❓ Questions**: [Start a discussion](https://github.com/yourusername/cyber-container-platform/discussions)
+- **🐛 Bug Reports**: [Open an issue](https://github.com/alott2223/cyber-container-platform/issues/new?template=bug_report.md)
+- **💡 Feature Requests**: [Open an issue](https://github.com/alott2223/cyber-container-platform/issues/new?template=feature_request.md)
+- **❓ Questions**: [Start a discussion](https://github.com/alott2223/cyber-container-platform/discussions)
+
+---
+
+## ❓ Frequently Asked Questions
+
+<details>
+<summary><strong>Do I need Docker installed to use this?</strong></summary>
+
+Yes, Cyber Container Platform manages Docker containers, so you need Docker Engine or Docker Desktop installed. However, we're working on a mock mode for development without Docker (see [Issue #4](https://github.com/alott2223/cyber-container-platform/issues/4)).
+</details>
+
+<details>
+<summary><strong>Is this a replacement for Docker Desktop?</strong></summary>
+
+It's an alternative! While Docker Desktop provides Docker Engine + GUI, Cyber Container Platform is a web-based management interface that works with any Docker installation. It's lighter, more customizable, and has a unique cyberpunk theme.
+</details>
+
+<details>
+<summary><strong>Can I use this in production?</strong></summary>
+
+Yes! The platform includes enterprise-level features like JWT authentication, security headers, rate limiting, error handling, and monitoring. See our [Production Deployment Guide](./docs/deployment.md) for best practices.
+</details>
+
+<details>
+<summary><strong>How is this different from Portainer?</strong></summary>
+
+- **Lighter weight**: Smaller footprint and faster startup
+- **Modern stack**: Go + React + Next.js
+- **Unique UI**: Cyberpunk-themed interface
+- **Terminal integration**: Built-in Docker terminal
+- **Open source**: MIT licensed with full customization
+</details>
+
+<details>
+<summary><strong>Does it support Docker Compose?</strong></summary>
+
+Container management supports all Docker features. Full Docker Compose integration is on the roadmap. You can currently run docker-compose commands through the terminal.
+</details>
+
+<details>
+<summary><strong>Can I run this on Raspberry Pi?</strong></summary>
+
+Yes! The platform is lightweight enough to run on Raspberry Pi 4+. See our [Installation Guide](./docs/installation.md) for ARM-specific instructions.
+</details>
+
+<details>
+<summary><strong>Is there a mobile app?</strong></summary>
+
+The web interface is fully responsive and works great on mobile browsers. A native mobile app is not currently planned, but the PWA version works offline.
+</details>
+
+<details>
+<summary><strong>How do I contribute?</strong></summary>
+
+We love contributions! Check out our [Contributing Guide](./CONTRIBUTING.md) for details on how to get started. All skill levels welcome!
+</details>
 
 ---
 
