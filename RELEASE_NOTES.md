@@ -194,6 +194,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **API Documentation**: https://github.com/alott2223/cyber-container-platform/blob/main/docs/api.md
 - **Issues**: https://github.com/alott2223/cyber-container-platform/issues
 - **Discussions**: https://github.com/alott2223/cyber-container-platform/discussions
+- **Support**: [Buy Me a Coffee](https://buymeacoffee.com/alott) ☕
 
 ---
 

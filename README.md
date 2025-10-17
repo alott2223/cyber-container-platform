@@ -14,6 +14,7 @@
 [![Documentation](https://img.shields.io/badge/📚-Documentation-4ecdc4?style=for-the-badge)](./docs)
 [![Contributing](https://img.shields.io/badge/🤝-Contributing-45b7d1?style=for-the-badge)](./CONTRIBUTING.md)
 [![Tests](https://img.shields.io/badge/🧪-Tests-00ff00?style=for-the-badge)](https://github.com/alott2223/cyber-container-platform/actions)
+[![Buy Me a Coffee](https://img.shields.io/badge/☕-Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge)](https://buymeacoffee.com/alott)
 
 </div>
 
@@ -279,8 +280,9 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 **Made with ❤️ by developers, for developers**
 
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yourusername/cyber-container-platform)
-[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/yourusername)
-[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/yourdiscord)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/alott2223/cyber-container-platform)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/alott)
+[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/alott2223)
+[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cyber-container-platform)
 
 </div>
