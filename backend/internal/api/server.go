@@ -2,12 +2,16 @@ package api
 
 import (
 	"log"
+	"net/http"
 	"time"
 
 	"cyber-container-platform/internal/config"
 	"cyber-container-platform/internal/database"
 	"cyber-container-platform/internal/docker"
 	"cyber-container-platform/internal/websocket"
+	"cyber-container-platform/internal/middleware"
+	"cyber-container-platform/internal/monitoring"
+	"cyber-container-platform/internal/logger"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -19,6 +23,8 @@ type Server struct {
 	dockerClient *docker.Client
 	wsHub        *websocket.Hub
 	router       *gin.Engine
+	logger       *logger.Logger
+	metrics      *monitoring.Metrics
 }
 
 func NewServer(cfg *config.Config, db *database.Database, dockerClient *docker.Client, wsHub *websocket.Hub) *Server {
@@ -27,6 +33,8 @@ func NewServer(cfg *config.Config, db *database.Database, dockerClient *docker.C
 		db:           db,
 		dockerClient: dockerClient,
 		wsHub:        wsHub,
+		logger:       logger.New("api", logger.INFO),
+		metrics:      monitoring.GlobalMetrics,
 	}
 
 	server.setupRouter()
@@ -40,10 +48,19 @@ func (s *Server) setupRouter() {
 
 	s.router = gin.Default()
 
+	// Enterprise-level middleware stack
+	s.router.Use(middleware.SecurityHeaders())
+	s.router.Use(middleware.CORSMiddleware())
+	s.router.Use(middleware.RateLimiter(100, time.Minute))
+	s.router.Use(middleware.InputSanitizer())
+	s.router.Use(middleware.RequestLogger())
+
 	// Error handling middleware
 	s.router.Use(func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
+				s.logger.Error("Panic recovered", err.(error))
+				s.metrics.RecordError("panic")
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"error": "Internal server error",
 					"code":  "INTERNAL_ERROR",
@@ -51,22 +68,6 @@ func (s *Server) setupRouter() {
 				c.Abort()
 			}
 		}()
-		c.Next()
-	})
-
-	// Security middleware
-	s.router.Use(func(c *gin.Context) {
-		// Security headers
-		c.Header("X-Content-Type-Options", "nosniff")
-		c.Header("X-Frame-Options", "DENY")
-		c.Header("X-XSS-Protection", "1; mode=block")
-		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
-		c.Header("Content-Security-Policy", "default-src 'self'")
-		
-		// Rate limiting headers
-		c.Header("X-RateLimit-Limit", "100")
-		c.Header("X-RateLimit-Remaining", "99")
-		
 		c.Next()
 	})
 
@@ -85,13 +86,14 @@ func (s *Server) setupRouter() {
 
 	// Health check endpoint
 	s.router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status":    "healthy",
-			"timestamp": time.Now().Unix(),
-			"version":   "1.0.0",
-			"uptime":    time.Since(time.Unix(1697123456, 0)).Seconds(),
-			"go_version": "1.24.0",
-		})
+		health := s.metrics.HealthCheck()
+		c.JSON(http.StatusOK, health)
+	})
+
+	// Metrics endpoint
+	s.router.GET("/metrics", func(c *gin.Context) {
+		stats := s.metrics.GetStats()
+		c.JSON(http.StatusOK, stats)
 	})
 
 	// WebSocket endpoint

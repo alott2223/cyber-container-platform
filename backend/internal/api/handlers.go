@@ -554,7 +554,7 @@ func isValidContainerName(name string) bool {
 	}
 	
 	// Must start and end with alphanumeric
-	if !isAlphanumeric(name[0]) || !isAlphanumeric(name[len(name)-1]) {
+	if !isAlphanumeric(rune(name[0])) || !isAlphanumeric(rune(name[len(name)-1])) {
 		return false
 	}
 	
