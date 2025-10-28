@@ -29,9 +29,6 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     try {
       await login(data.username, data.password)
       toast.success('Login successful!')
-      setTimeout(() => {
-        onLogin?.()
-      }, 1000)
     } catch (error) {
       toast.error('Login failed. Please check your credentials.')
     }
