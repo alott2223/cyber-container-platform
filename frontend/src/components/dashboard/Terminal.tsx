@@ -52,14 +52,47 @@ export function Terminal() {
         return
       }
       
-      if (cmd === 'help') {
-        const result = `Available commands:
-  docker ps          - List containers
-  docker images      - List images
-  docker stats       - Container stats
-  docker network ls  - List networks
-  clear             - Clear terminal
-  help              - Show this help`
+      if (cmd === 'help' || cmd === '--help' || cmd === '-h') {
+        const result = `╔════════════════════════════════════════════════════════════╗
+║          🚀 Cyber Container Platform Terminal           ║
+╚════════════════════════════════════════════════════════════╝
+
+📋 Available Commands:
+
+  🐳 Container Commands:
+    docker ps                    - List all containers
+    docker ps -a                 - List all containers (including stopped)
+    docker logs <id>             - View container logs
+    docker stats                 - Real-time container statistics
+    docker start <id>            - Start a container
+    docker stop <id>             - Stop a container
+    docker restart <id>          - Restart a container
+    docker rm <id>               - Remove a container
+  
+  🖼️ Image Commands:
+    docker images                - List all images
+    docker pull <image>          - Pull an image
+    docker rmi <id>              - Remove an image
+  
+  🌐 Network Commands:
+    docker network ls            - List all networks
+    docker network inspect <id>  - Inspect a network
+  
+  💾 Volume Commands:
+    docker volume ls             - List all volumes
+  
+  🛠️ System Commands:
+    docker info                  - Show Docker system information
+    docker version               - Show Docker version
+    clear                        - Clear terminal
+    help                         - Show this help message
+  
+💡 Tips:
+  • Use ↑/↓ arrows to navigate command history
+  • Press Ctrl+C to cancel a running command
+  • Type 'clear' to clean the terminal output
+
+💻 For more information, visit: https://docs.docker.com`
         setOutput(prev => [...prev, result, ''])
         return
       }

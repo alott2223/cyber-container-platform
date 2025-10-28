@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
-import { Plus, Trash2, RefreshCw, FileText, Edit, Play } from 'lucide-react'
+import { Plus, Trash2, RefreshCw, FileText, Edit, Play, ExternalLink, BookOpen } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { containerTemplates, ContainerTemplate, getTemplatesByCategory } from '@/data/templates'
+import { apiClient } from '@/lib/api'
 
 interface Template {
   id: number
@@ -16,21 +18,40 @@ interface Template {
 
 export function TemplateManager() {
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedTemplate, setSelectedTemplate] = useState<ContainerTemplate | null>(null)
   const queryClient = useQueryClient()
+  
+  const categories = ['all', 'web', 'database', 'cache', 'language', 'utility']
 
-  const { data: templates = [], isLoading, error } = useQuery<Template[]>(
-    'templates',
-    async () => {
-      const response = await fetch('http://localhost:8080/api/v1/templates', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('cyber-auth-storage')}`,
-        },
+  const deployTemplate = async (template: ContainerTemplate) => {
+    try {
+      const portMapping: Record<string, string> = {}
+      Object.entries(template.ports).forEach(([host, container]) => {
+        portMapping[host] = container
       })
-      if (!response.ok) throw new Error('Failed to fetch templates')
-      const data = await response.json()
-      return data.templates
+
+      const response = await apiClient.post('/containers', {
+        name: `${template.id}-${Date.now()}`,
+        image: template.image,
+        ports: portMapping,
+        environment: template.environment,
+        volumes: template.volumes,
+        networks: template.networks,
+      })
+
+      if (!response.ok) throw new Error('Failed to deploy template')
+      
+      toast.success(`${template.name} deployed successfully!`)
+      queryClient.invalidateQueries('containers')
+    } catch (error) {
+      toast.error(`Failed to deploy ${template.name}`)
     }
-  )
+  }
+
+  const filteredTemplates = selectedCategory === 'all' 
+    ? containerTemplates 
+    : getTemplatesByCategory(selectedCategory as ContainerTemplate['category'])
 
   const deleteTemplateMutation = useMutation(
     async (id: number) => {
@@ -81,102 +102,93 @@ export function TemplateManager() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-cyber font-bold text-gradient">Templates</h1>
-          <p className="text-gray-400 mt-1">Manage container templates and configurations</p>
+          <h1 className="text-3xl font-cyber font-bold text-gradient">Container Templates</h1>
+          <p className="text-gray-400 mt-1">Deploy pre-configured containers with one click</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="cyber-button-primary"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Create Template
-        </button>
+      </div>
+
+      {/* Category Filter */}
+      <div className="flex flex-wrap gap-2">
+        {categories.map((category) => (
+          <button
+            key={category}
+            onClick={() => setSelectedCategory(category)}
+            className={`px-4 py-2 rounded-lg transition-all ${
+              selectedCategory === category
+                ? 'bg-cyber-accent text-black font-medium'
+                : 'bg-cyber-surface text-gray-400 hover:bg-cyber-surface/80'
+            }`}
+          >
+            {category.charAt(0).toUpperCase() + category.slice(1)}
+          </button>
+        ))}
       </div>
 
       {/* Templates Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="cyber-card p-6 animate-pulse">
-              <div className="h-4 bg-gray-700 rounded mb-4"></div>
-              <div className="h-3 bg-gray-700 rounded mb-2"></div>
-              <div className="h-3 bg-gray-700 rounded mb-4"></div>
-              <div className="flex space-x-2">
-                <div className="h-8 bg-gray-700 rounded flex-1"></div>
-                <div className="h-8 bg-gray-700 rounded w-8"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : templates.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-24 h-24 bg-cyber-surface/50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-12 h-12 text-gray-400" />
-          </div>
-          <h3 className="text-xl font-medium text-gray-400 mb-2">No templates found</h3>
-          <p className="text-gray-500 mb-4">Create your first template to get started</p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="cyber-button-primary"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Create Template
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {templates.map((template) => (
-            <div key={template.id} className="cyber-card p-6 group">
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-medium text-white truncate">{template.name}</h3>
-                  <p className="text-sm text-gray-400">{template.image}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTemplates.map((template) => (
+          <div key={template.id} className="cyber-card p-6 group hover:border-cyber-accent/50 transition-all">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <span className="text-3xl">{template.icon}</span>
+                <div>
+                  <h3 className="text-lg font-medium text-white">{template.name}</h3>
+                  <p className="text-xs text-gray-400 capitalize">{template.category}</p>
                 </div>
-                <button
-                  onClick={() => deleteTemplateMutation.mutate(template.id)}
-                  className="p-2 text-cyber-error hover:bg-cyber-error/10 rounded transition-colors opacity-0 group-hover:opacity-100"
+              </div>
+              <span className={`px-2 py-1 text-xs rounded ${
+                template.difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
+                template.difficulty === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                'bg-red-500/20 text-red-400'
+              }`}>
+                {template.difficulty}
+              </span>
+            </div>
+
+            {/* Description */}
+            <p className="text-sm text-gray-300 mb-4 line-clamp-2">{template.description}</p>
+
+            {/* Image */}
+            <div className="mb-4 p-2 bg-cyber-surface/50 rounded">
+              <code className="text-xs text-cyber-accent">{template.image}</code>
+            </div>
+
+            {/* Ports */}
+            {Object.keys(template.ports).length > 0 && (
+              <div className="mb-4">
+                <span className="text-xs text-gray-500">Ports: </span>
+                <span className="text-xs text-cyber-accent">
+                  {Object.entries(template.ports).map(([host, container]) => 
+                    `${host}:${container}`
+                  ).join(', ')}
+                </span>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => deployTemplate(template)}
+                className="flex-1 cyber-button-primary text-sm"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Deploy
+              </button>
+              {template.documentation && (
+                <a
+                  href={template.documentation}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cyber-button text-sm"
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Description */}
-              {template.description && (
-                <div className="mb-4">
-                  <p className="text-sm text-gray-300 line-clamp-2">{template.description}</p>
-                </div>
+                  <BookOpen className="w-4 h-4" />
+                </a>
               )}
-
-              {/* Details */}
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Created</span>
-                  <span className="text-xs text-gray-400">{formatDate(template.created_at)}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Config Size</span>
-                  <span className="text-xs text-cyber-accent">
-                    {Math.round(template.config.length / 1024)}KB
-                  </span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex space-x-2">
-                <button className="flex-1 cyber-button text-xs">
-                  <Play className="w-3 h-3 mr-1" />
-                  Deploy
-                </button>
-                <button className="cyber-button text-xs">
-                  <Edit className="w-3 h-3" />
-                </button>
-              </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
