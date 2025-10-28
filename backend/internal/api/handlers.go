@@ -580,6 +580,74 @@ func (s *Server) listImages(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"images": images})
 }
 
+func (s *Server) getSystemInfo(c *gin.Context) {
+	info, err := s.dockerClient.GetSystemInfo()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"containers":      info.Containers,
+		"containers_running": info.ContainersRunning,
+		"containers_paused":  info.ContainersPaused,
+		"containers_stopped": info.ContainersStopped,
+		"images":          info.Images,
+		"memory_limit":    info.MemTotal,
+		"cpus":            info.NCPU,
+		"docker_version":  info.ServerVersion,
+		"os":              info.OperatingSystem,
+		"architecture":    info.Architecture,
+	})
+}
+
+func (s *Server) pullImage(c *gin.Context) {
+	var req struct {
+		Image string `json:"image"`
+	}
+	
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+	
+	if req.Image == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Image name is required"})
+		return
+	}
+	
+	reader, err := s.dockerClient.PullImage(req.Image)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer reader.Close()
+	
+	// Read the pull progress
+	progress, _ := io.ReadAll(reader)
+	
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Image pulled successfully",
+		"progress": string(progress),
+	})
+}
+
+func (s *Server) removeImage(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Image ID is required"})
+		return
+	}
+	
+	err := s.dockerClient.RemoveImage(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"message": "Image removed successfully"})
+}
+
 // Validation helper functions
 func isValidContainerName(name string) bool {
 	// Docker container name validation: alphanumeric, hyphens, underscores, 1-63 chars

@@ -10,8 +10,10 @@ import { TemplateManager } from './TemplateManager'
 import { Terminal } from './Terminal'
 import { Metrics } from './Metrics'
 import { Settings } from './Settings'
+import { SystemMonitor } from './SystemMonitor'
+import { ImageManager } from './ImageManager'
 
-export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'settings'
+export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'images' | 'system' | 'settings'
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('containers')
@@ -31,6 +33,10 @@ export function Dashboard() {
         return <Terminal />
       case 'metrics':
         return <Metrics />
+      case 'images':
+        return <ImageManager />
+      case 'system':
+        return <SystemMonitor />
       case 'settings':
         return <Settings />
       default:

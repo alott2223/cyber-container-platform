@@ -163,6 +163,15 @@ func (s *Server) setupRouter() {
 		images.Use(s.authMiddleware())
 		{
 			images.GET("", s.listImages)
+			images.POST("/pull", s.pullImage)
+			images.DELETE("/:id", s.removeImage)
+		}
+
+		// System
+		system := api.Group("/system")
+		system.Use(s.authMiddleware())
+		{
+			system.GET("/info", s.getSystemInfo)
 		}
 	}
 

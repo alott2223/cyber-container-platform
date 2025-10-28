@@ -10,7 +10,9 @@ import {
   Settings, 
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  Activity,
+  Image
 } from 'lucide-react'
 import { TabType } from './Dashboard'
 
@@ -28,6 +30,8 @@ const tabs = [
   { id: 'templates' as TabType, label: 'Templates', icon: FileText },
   { id: 'terminal' as TabType, label: 'Terminal', icon: Terminal },
   { id: 'metrics' as TabType, label: 'Metrics', icon: BarChart3 },
+  { id: 'images' as TabType, label: 'Images', icon: Image },
+  { id: 'system' as TabType, label: 'System', icon: Activity },
   { id: 'settings' as TabType, label: 'Settings', icon: Settings },
 ]
 

@@ -41,20 +41,20 @@ type PortInfo struct {
 }
 
 type NetworkInfo struct {
-	ID       string            `json:"id"`
-	Name     string            `json:"name"`
-	Driver   string            `json:"driver"`
-	Scope    string            `json:"scope"`
-	Labels   map[string]string `json:"labels"`
+	ID         string                      `json:"id"`
+	Name       string                      `json:"name"`
+	Driver     string                      `json:"driver"`
+	Scope      string                      `json:"scope"`
+	Labels     map[string]string           `json:"labels"`
 	Containers map[string]NetworkContainer `json:"containers"`
 }
 
 type NetworkContainer struct {
-	Name         string            `json:"name"`
-	EndpointID   string            `json:"endpoint_id"`
-	MacAddress   string            `json:"mac_address"`
-	IPv4Address  string            `json:"ipv4_address"`
-	IPv6Address  string            `json:"ipv6_address"`
+	Name        string `json:"name"`
+	EndpointID  string `json:"endpoint_id"`
+	MacAddress  string `json:"mac_address"`
+	IPv4Address string `json:"ipv4_address"`
+	IPv6Address string `json:"ipv6_address"`
 }
 
 type VolumeInfo struct {
@@ -63,6 +63,27 @@ type VolumeInfo struct {
 	Mountpoint string            `json:"mountpoint"`
 	Labels     map[string]string `json:"labels"`
 	CreatedAt  time.Time         `json:"created_at"`
+}
+
+type SystemInfo struct {
+	Containers      int     `json:"containers"`
+	ContainersRunning int  `json:"containers_running"`
+	ContainersPaused  int  `json:"containers_paused"`
+	ContainersStopped int  `json:"containers_stopped"`
+	Images          int     `json:"images"`
+	MemoryLimit     int64   `json:"memory_limit"`
+	MemoryUsage     int64   `json:"memory_usage"`
+	CPUs            int     `json:"cpus"`
+	CPUUsage        float64 `json:"cpu_usage"`
+	DiskUsage       int64   `json:"disk_usage"`
+	DiskLimit       int64   `json:"disk_limit"`
+}
+
+type ImageInfo struct {
+	ID       string    `json:"id"`
+	RepoTags []string  `json:"repo_tags"`
+	Size     int64     `json:"size"`
+	Created  time.Time `json:"created"`
 }
 
 func NewClient() (*Client, error) {
@@ -146,7 +167,7 @@ func (c *Client) GetContainerLogs(id string) (io.ReadCloser, error) {
 
 func (c *Client) ExecContainer(id string, command []string) (string, error) {
 	ctx := context.Background()
-	
+
 	// Create exec configuration
 	execConfig := types.ExecConfig{
 		Cmd:          command,
@@ -155,13 +176,13 @@ func (c *Client) ExecContainer(id string, command []string) (string, error) {
 		AttachStdin:  false,
 		Tty:          false,
 	}
-	
+
 	// Create exec instance
 	execIDResp, err := c.cli.ContainerExecCreate(ctx, id, execConfig)
 	if err != nil {
 		return "", fmt.Errorf("failed to create exec: %w", err)
 	}
-	
+
 	// Attach to exec to get output
 	attachResp, err := c.cli.ContainerExecAttach(ctx, execIDResp.ID, types.ExecStartCheck{
 		Detach: false,
@@ -171,20 +192,20 @@ func (c *Client) ExecContainer(id string, command []string) (string, error) {
 		return "", fmt.Errorf("failed to attach to exec: %w", err)
 	}
 	defer attachResp.Close()
-	
+
 	// Read and demultiplex Docker stream (stdout + stderr)
 	var stdoutBuf, stderrBuf bytes.Buffer
 	_, err = stdcopy.StdCopy(&stdoutBuf, &stderrBuf, attachResp.Reader)
 	if err != nil && err != io.EOF {
 		return "", fmt.Errorf("failed to read exec output: %w", err)
 	}
-	
+
 	// Return stdout, append stderr if present
 	result := stdoutBuf.String()
 	if stderrBuf.Len() > 0 {
 		result += "\n[stderr]\n" + stderrBuf.String()
 	}
-	
+
 	return result, nil
 }
 
@@ -197,21 +218,21 @@ func (c *Client) ListNetworks() ([]NetworkInfo, error) {
 	var result []NetworkInfo
 	for _, net := range networks {
 		info := NetworkInfo{
-			ID:       net.ID,
-			Name:     net.Name,
-			Driver:   net.Driver,
-			Scope:    net.Scope,
-			Labels:   net.Labels,
+			ID:         net.ID,
+			Name:       net.Name,
+			Driver:     net.Driver,
+			Scope:      net.Scope,
+			Labels:     net.Labels,
 			Containers: make(map[string]NetworkContainer),
 		}
 
 		for name, container := range net.Containers {
 			info.Containers[name] = NetworkContainer{
-				Name:         container.Name,
-				EndpointID:   container.EndpointID,
-				MacAddress:   container.MacAddress,
-				IPv4Address:  container.IPv4Address,
-				IPv6Address:  container.IPv6Address,
+				Name:        container.Name,
+				EndpointID:  container.EndpointID,
+				MacAddress:  container.MacAddress,
+				IPv4Address: container.IPv4Address,
+				IPv6Address: container.IPv6Address,
 			}
 		}
 
@@ -278,4 +299,18 @@ func (c *Client) ListImages() ([]types.ImageSummary, error) {
 // GetSystemInfo returns Docker system information
 func (c *Client) GetSystemInfo() (types.Info, error) {
 	return c.cli.Info(context.Background())
+}
+
+// PullImage pulls a Docker image
+func (c *Client) PullImage(imageName string) (io.ReadCloser, error) {
+	options := types.ImagePullOptions{}
+	return c.cli.ImagePull(context.Background(), imageName, options)
+}
+
+// RemoveImage removes a Docker image
+func (c *Client) RemoveImage(imageID string) error {
+	_, err := c.cli.ImageRemove(context.Background(), imageID, types.ImageRemoveOptions{
+		Force: false,
+	})
+	return err
 }
