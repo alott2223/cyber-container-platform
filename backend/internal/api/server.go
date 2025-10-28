@@ -124,6 +124,7 @@ func (s *Server) setupRouter() {
 			containers.DELETE("/:id", s.removeContainer)
 			containers.GET("/:id/logs", s.getContainerLogs)
 			containers.GET("/:id/stats", s.getContainerStats)
+			containers.POST("/:id/exec", s.execContainer)
 		}
 
 		// Networks

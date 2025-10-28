@@ -63,6 +63,7 @@ export function Terminal() {
     docker ps                    - List all containers
     docker ps -a                 - List all containers (including stopped)
     docker logs <id>             - View container logs
+    docker exec <id> <cmd>       - Execute command inside container
     docker stats                 - Real-time container statistics
     docker start <id>            - Start a container
     docker stop <id>             - Stop a container
@@ -138,6 +139,27 @@ redis        alpine    59b6e6946534   3 weeks ago    32.4MB`
           }
         } else {
           result = `Error: Please specify container ID`
+        }
+      } else if (cmd.startsWith('docker exec ')) {
+        // Parse: docker exec <container> <command>
+        const parts = cmd.split(' ').slice(2)
+        if (parts.length < 2) {
+          result = `Error: Usage: docker exec <container> <command>`
+        } else {
+          const containerId = parts[0]
+          const execCommand = parts.slice(1)
+          
+          const response = await apiClient.post(`/containers/${containerId}/exec`, {
+            command: execCommand
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            result = data.output || '(no output)'
+          } else {
+            const errorData = await response.json()
+            result = `Error: ${errorData.error || 'Failed to execute command'}`
+          }
         }
       } else {
         result = `Command not found: ${command}`
@@ -235,8 +257,8 @@ redis        alpine    59b6e6946534   3 weeks ago    32.4MB`
           {[
             { cmd: 'docker ps', desc: 'List containers' },
             { cmd: 'docker images', desc: 'List images' },
-            { cmd: 'docker stats', desc: 'Container stats' },
             { cmd: 'docker network ls', desc: 'List networks' },
+            { cmd: 'help', desc: 'Show help' },
           ].map((item, index) => (
                     <button
                       key={index}

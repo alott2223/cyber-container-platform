@@ -142,6 +142,43 @@ func (c *Client) GetContainerLogs(id string) (io.ReadCloser, error) {
 	})
 }
 
+func (c *Client) ExecContainer(id string, command []string) (string, error) {
+	ctx := context.Background()
+	
+	// Create exec configuration
+	execConfig := types.ExecConfig{
+		Cmd:          command,
+		AttachStdout: true,
+		AttachStderr: true,
+		AttachStdin:  false,
+		Tty:          false,
+	}
+	
+	// Create exec instance
+	execIDResp, err := c.cli.ContainerExecCreate(ctx, id, execConfig)
+	if err != nil {
+		return "", fmt.Errorf("failed to create exec: %w", err)
+	}
+	
+	// Attach to exec to get output
+	attachResp, err := c.cli.ContainerExecAttach(ctx, execIDResp.ID, types.ExecStartCheck{
+		Detach: false,
+		Tty:    false,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to attach to exec: %w", err)
+	}
+	defer attachResp.Close()
+	
+	// Read output
+	output, err := io.ReadAll(attachResp.Reader)
+	if err != nil {
+		return "", fmt.Errorf("failed to read exec output: %w", err)
+	}
+	
+	return string(output), nil
+}
+
 func (c *Client) ListNetworks() ([]NetworkInfo, error) {
 	networks, err := c.cli.NetworkList(context.Background(), types.NetworkListOptions{})
 	if err != nil {

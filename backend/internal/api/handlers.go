@@ -295,6 +295,32 @@ func (s *Server) getContainerStats(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"stats": stats})
 }
 
+func (s *Server) execContainer(c *gin.Context) {
+	id := c.Param("id")
+	
+	var req struct {
+		Command []string `json:"command"`
+	}
+	
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+	
+	if len(req.Command) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Command is required"})
+		return
+	}
+	
+	output, err := s.dockerClient.ExecContainer(id, req.Command)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{"output": output})
+}
+
 func (s *Server) listNetworks(c *gin.Context) {
 	networks, err := s.dockerClient.ListNetworks()
 	if err != nil {
