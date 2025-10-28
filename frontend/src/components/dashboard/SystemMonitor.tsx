@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useQuery } from 'react-query'
-import { Activity, Cpu, HardDrive, MemoryStick, Server, HddStack } from 'lucide-react'
+import { Activity, Cpu, HardDrive, MemoryStick, Server, Database } from 'lucide-react'
 import { apiClient } from '@/lib/api'
 
 export function SystemMonitor() {
@@ -85,7 +85,7 @@ export function SystemMonitor() {
             <div className="cyber-card p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-blue-500/20 rounded-lg">
-                  <HddStack className="w-6 h-6 text-blue-400" />
+                  <Database className="w-6 h-6 text-blue-400" />
                 </div>
                 <span className="text-2xl font-bold text-blue-400">
                   {systemInfo.images || 0}
