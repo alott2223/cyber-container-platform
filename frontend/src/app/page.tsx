@@ -7,6 +7,8 @@ import { useAuthStore } from '@/stores/authStore'
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuthStore()
 
+  console.log('Page render - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading)
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-cyber-bg flex items-center justify-center">

@@ -37,12 +37,15 @@ export const useAuthStore = create<AuthState>()(
 
           const data = await response.json()
           
+          console.log('Login successful, setting auth state')
           set({
             isAuthenticated: true,
             token: data.token,
             user: { username },
             isLoading: false,
           })
+          
+          console.log('After set - isAuthenticated:', get().isAuthenticated)
         } catch (error) {
           set({ isLoading: false })
           throw error
