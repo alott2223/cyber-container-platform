@@ -1,16 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { Dashboard } from '@/components/dashboard/Dashboard'
 import { useAuthStore } from '@/stores/authStore'
 
 export default function Home() {
-  const { isAuthenticated, isLoading, setLoading } = useAuthStore()
-
-  useEffect(() => {
-    setLoading(false)
-  }, [setLoading])
+  const { isAuthenticated, isLoading } = useAuthStore()
 
   if (isLoading) {
     return (

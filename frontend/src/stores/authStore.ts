@@ -17,7 +17,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       token: null,
       user: null,
-      isLoading: true,
+      isLoading: false,
 
       login: async (username: string, password: string) => {
         set({ isLoading: true })
