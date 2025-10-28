@@ -172,20 +172,20 @@ func (c *Client) ExecContainer(id string, command []string) (string, error) {
 	}
 	defer attachResp.Close()
 	
-	// Read output - handle both stdout and stderr from Docker multiplexed stream
-	stdout, err := io.ReadAll(attachResp.Reader)
-	if err != nil {
+	// Read and demultiplex Docker stream (stdout + stderr)
+	var stdoutBuf, stderrBuf bytes.Buffer
+	_, err = stdcopy.StdCopy(&stdoutBuf, &stderrBuf, attachResp.Reader)
+	if err != nil && err != io.EOF {
 		return "", fmt.Errorf("failed to read exec output: %w", err)
 	}
 	
-	// Extract stdout from Docker's multiplexed stream
-	var stdoutBuf, stderrBuf bytes.Buffer
-	if len(stdout) > 0 {
-		stdcopy.StdCopy(&stdoutBuf, &stderrBuf, bytes.NewReader(stdout))
-		return stdoutBuf.String(), nil
+	// Return stdout, append stderr if present
+	result := stdoutBuf.String()
+	if stderrBuf.Len() > 0 {
+		result += "\n[stderr]\n" + stderrBuf.String()
 	}
 	
-	return "", nil
+	return result, nil
 }
 
 func (c *Client) ListNetworks() ([]NetworkInfo, error) {
