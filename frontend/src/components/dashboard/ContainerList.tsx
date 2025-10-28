@@ -37,7 +37,11 @@ export interface Container {
   memory_usage: number
 }
 
-export function ContainerList() {
+interface ContainerListProps {
+  onShellClick?: () => void
+}
+
+export function ContainerList({ onShellClick }: ContainerListProps = {}) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -227,6 +231,7 @@ export function ContainerList() {
               onStart={() => startContainerMutation.mutate(container.id)}
               onStop={() => stopContainerMutation.mutate(container.id)}
               onRemove={() => removeContainerMutation.mutate(container.id)}
+              onShell={onShellClick}
               isLoading={startContainerMutation.isLoading || stopContainerMutation.isLoading}
             />
           ))}

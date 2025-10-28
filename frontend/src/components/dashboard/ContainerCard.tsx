@@ -9,10 +9,11 @@ interface ContainerCardProps {
   onStart: () => void
   onStop: () => void
   onRemove: () => void
+  onShell?: () => void
   isLoading: boolean
 }
 
-export function ContainerCard({ container, onStart, onStop, onRemove, isLoading }: ContainerCardProps) {
+export function ContainerCard({ container, onStart, onStop, onRemove, onShell, isLoading }: ContainerCardProps) {
   const [showMenu, setShowMenu] = useState(false)
 
   const getStatusColor = (state: string) => {
@@ -177,7 +178,11 @@ export function ContainerCard({ container, onStart, onStop, onRemove, isLoading 
           </button>
         )}
         
-        <button className="cyber-button">
+        <button 
+          onClick={onShell}
+          className="cyber-button"
+          title="Open terminal"
+        >
           <Terminal className="w-4 h-4" />
         </button>
       </div>

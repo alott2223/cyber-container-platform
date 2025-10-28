@@ -20,7 +20,7 @@ export function Dashboard() {
   const renderContent = () => {
     switch (activeTab) {
       case 'containers':
-        return <ContainerList />
+        return <ContainerList onShellClick={() => setActiveTab('terminal')} />
       case 'networks':
         return <NetworkManager />
       case 'volumes':
@@ -34,7 +34,7 @@ export function Dashboard() {
       case 'settings':
         return <Settings />
       default:
-        return <ContainerList />
+        return <ContainerList onShellClick={() => setActiveTab('terminal')} />
     }
   }
 
