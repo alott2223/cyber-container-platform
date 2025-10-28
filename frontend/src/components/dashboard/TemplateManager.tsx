@@ -17,38 +17,60 @@ export function TemplateManager() {
     try {
       const portMapping: Record<string, string> = {}
       Object.entries(template.ports).forEach(([host, container]) => {
-        portMapping[host] = container
+        if (host && container) {
+          portMapping[host] = container
+        }
       })
 
       // Convert volumes array to map format expected by backend
       const volumeMapping: Record<string, string> = {}
-      template.volumes.forEach((volume, index) => {
-        // Each volume string format is assumed to be "host_path:container_path"
-        // If it's just a path, we'll create a simple mapping
-        if (volume.includes(':')) {
-          const [host, container] = volume.split(':')
-          volumeMapping[host] = container
-        } else {
-          // If no colon, use the volume as both host and container path
-          volumeMapping[volume] = volume
+      template.volumes.forEach((volume) => {
+        if (volume && volume.trim()) {
+          // Each volume string format is assumed to be "host_path:container_path"
+          // If it's just a path, we'll create a simple mapping
+          if (volume.includes(':')) {
+            const [host, container] = volume.split(':')
+            if (host && container) {
+              volumeMapping[host] = container
+            }
+          } else {
+            // If no colon, use the volume as both host and container path
+            volumeMapping[volume] = volume
+          }
         }
       })
 
-      const response = await apiClient.post('/containers', {
+      const payload: any = {
         name: `${template.id}-${Date.now()}`,
         image: template.image,
-        ports: portMapping,
-        environment: template.environment,
-        volumes: volumeMapping,
-        network: template.networks[0] || '', // Backend expects a single network string
-      })
+      }
 
-      if (!response.ok) throw new Error('Failed to deploy template')
+      // Only include fields that have values
+      if (Object.keys(portMapping).length > 0) {
+        payload.ports = portMapping
+      }
+      if (Object.keys(template.environment).length > 0) {
+        payload.environment = template.environment
+      }
+      if (Object.keys(volumeMapping).length > 0) {
+        payload.volumes = volumeMapping
+      }
+      if (template.networks && template.networks.length > 0 && template.networks[0]) {
+        payload.network = template.networks[0]
+      }
+
+      const response = await apiClient.post('/containers', payload)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to deploy template')
+      }
       
       toast.success(`${template.name} deployed successfully!`)
       queryClient.invalidateQueries('containers')
     } catch (error) {
-      toast.error(`Failed to deploy ${template.name}`)
+      console.error('Deploy error:', error)
+      toast.error(`Failed to deploy ${template.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
