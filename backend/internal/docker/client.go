@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 )
 
 type Client struct {
@@ -170,13 +172,20 @@ func (c *Client) ExecContainer(id string, command []string) (string, error) {
 	}
 	defer attachResp.Close()
 	
-	// Read output
-	output, err := io.ReadAll(attachResp.Reader)
+	// Read output - handle both stdout and stderr from Docker multiplexed stream
+	stdout, err := io.ReadAll(attachResp.Reader)
 	if err != nil {
 		return "", fmt.Errorf("failed to read exec output: %w", err)
 	}
 	
-	return string(output), nil
+	// Extract stdout from Docker's multiplexed stream
+	var stdoutBuf, stderrBuf bytes.Buffer
+	if len(stdout) > 0 {
+		stdcopy.StdCopy(&stdoutBuf, &stderrBuf, bytes.NewReader(stdout))
+		return stdoutBuf.String(), nil
+	}
+	
+	return "", nil
 }
 
 func (c *Client) ListNetworks() ([]NetworkInfo, error) {
