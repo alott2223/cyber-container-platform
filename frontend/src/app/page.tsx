@@ -1,15 +1,21 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { Dashboard } from '@/components/dashboard/Dashboard'
 import { useAuthStore } from '@/stores/authStore'
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuthStore()
+  const [mounted, setMounted] = useState(false)
 
-  console.log('Page render - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-  if (isLoading) {
+  console.log('Page render - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading, 'mounted:', mounted)
+
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-cyber-bg flex items-center justify-center">
         <div className="text-center">
