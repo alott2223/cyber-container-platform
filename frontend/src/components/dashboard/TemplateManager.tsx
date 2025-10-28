@@ -1,25 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
-import { Plus, Trash2, RefreshCw, FileText, Edit, Play, ExternalLink, BookOpen } from 'lucide-react'
+import { useMutation, useQueryClient } from 'react-query'
+import { Play, BookOpen } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { containerTemplates, ContainerTemplate, getTemplatesByCategory } from '@/data/templates'
 import { apiClient } from '@/lib/api'
 
-interface Template {
-  id: number
-  name: string
-  description: string
-  image: string
-  config: string
-  created_at: string
-}
-
 export function TemplateManager() {
-  const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [selectedTemplate, setSelectedTemplate] = useState<ContainerTemplate | null>(null)
   const queryClient = useQueryClient()
   
   const categories = ['all', 'web', 'database', 'cache', 'language', 'utility']
@@ -52,50 +41,6 @@ export function TemplateManager() {
   const filteredTemplates = selectedCategory === 'all' 
     ? containerTemplates 
     : getTemplatesByCategory(selectedCategory as ContainerTemplate['category'])
-
-  const deleteTemplateMutation = useMutation(
-    async (id: number) => {
-      const response = await fetch(`http://localhost:8080/api/v1/templates/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('cyber-auth-storage')}`,
-        },
-      })
-      if (!response.ok) throw new Error('Failed to delete template')
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('templates')
-        toast.success('Template deleted successfully')
-      },
-      onError: () => {
-        toast.error('Failed to delete template')
-      },
-    }
-  )
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-cyber-error">Failed to load templates</p>
-        <button 
-          onClick={() => queryClient.invalidateQueries('templates')}
-          className="cyber-button mt-4"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Retry
-        </button>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-6">
