@@ -20,13 +20,27 @@ export function TemplateManager() {
         portMapping[host] = container
       })
 
+      // Convert volumes array to map format expected by backend
+      const volumeMapping: Record<string, string> = {}
+      template.volumes.forEach((volume, index) => {
+        // Each volume string format is assumed to be "host_path:container_path"
+        // If it's just a path, we'll create a simple mapping
+        if (volume.includes(':')) {
+          const [host, container] = volume.split(':')
+          volumeMapping[host] = container
+        } else {
+          // If no colon, use the volume as both host and container path
+          volumeMapping[volume] = volume
+        }
+      })
+
       const response = await apiClient.post('/containers', {
         name: `${template.id}-${Date.now()}`,
         image: template.image,
         ports: portMapping,
         environment: template.environment,
-        volumes: template.volumes,
-        networks: template.networks,
+        volumes: volumeMapping,
+        network: template.networks[0] || '', // Backend expects a single network string
       })
 
       if (!response.ok) throw new Error('Failed to deploy template')
