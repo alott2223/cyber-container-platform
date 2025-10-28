@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -198,7 +199,14 @@ func (s *Server) createContainer(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": containerID, "message": "Container created successfully"})
+	// Start the container after creation
+	err = s.dockerClient.StartContainer(containerID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Container created but failed to start: %v", err)})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"id": containerID, "message": "Container created and started successfully"})
 }
 
 func (s *Server) getContainer(c *gin.Context) {
