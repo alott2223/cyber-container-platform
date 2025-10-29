@@ -22,44 +22,49 @@ export function VolumeManager() {
   const { data: volumes = [], isLoading, error } = useQuery<Volume[]>(
     'volumes',
     async () => {
-      const response = await fetch('http://localhost:8080/api/v1/volumes', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('cyber-auth-storage')}`,
-        },
-      })
+      const response = await apiClient.get('/volumes')
       if (!response.ok) throw new Error('Failed to fetch volumes')
       const data = await response.json()
-      return data.volumes
+      return data.volumes.map((vol: any) => ({
+        ...vol,
+        created_at: vol.created_at || new Date().toISOString(), // Handle missing date
+      }))
     }
   )
 
   const removeVolumeMutation = useMutation(
     async (name: string) => {
-      const response = await fetch(`http://localhost:8080/api/v1/volumes/${name}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('cyber-auth-storage')}`,
-        },
-      })
-      if (!response.ok) throw new Error('Failed to remove volume')
+      const response = await apiClient.delete(`/volumes/${name}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to remove volume')
+      }
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries('volumes')
         toast.success('Volume removed successfully')
       },
-      onError: () => {
-        toast.error('Failed to remove volume')
+      onError: (err: Error) => {
+        toast.error(`Failed to remove volume: ${err.message}`)
       },
     }
   )
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) {
+        return 'Unknown'
+      }
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    } catch {
+      return 'Unknown'
+    }
   }
 
   if (error) {
