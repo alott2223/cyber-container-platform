@@ -12,7 +12,11 @@ import {
   ChevronRight,
   Zap,
   Activity,
-  Image
+  Image,
+  Folder,
+  Layers,
+  Cpu,
+  Monitor
 } from 'lucide-react'
 import { TabType } from './Dashboard'
 
@@ -31,6 +35,10 @@ const tabs = [
   { id: 'terminal' as TabType, label: 'Terminal', icon: Terminal },
   { id: 'metrics' as TabType, label: 'Metrics', icon: BarChart3 },
   { id: 'images' as TabType, label: 'Images', icon: Image },
+  { id: 'files' as TabType, label: 'Files', icon: Folder },
+  { id: 'compose' as TabType, label: 'Compose', icon: Layers },
+  { id: 'processes' as TabType, label: 'Processes', icon: Cpu },
+  { id: 'monitor' as TabType, label: 'Monitor', icon: Monitor },
   { id: 'system' as TabType, label: 'System', icon: Activity },
   { id: 'settings' as TabType, label: 'Settings', icon: Settings },
 ]

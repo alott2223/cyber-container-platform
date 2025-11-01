@@ -12,8 +12,12 @@ import { Metrics } from './Metrics'
 import { Settings } from './Settings'
 import { SystemMonitor } from './SystemMonitor'
 import { ImageManager } from './ImageManager'
+import { FileManager } from './FileManager'
+import { ComposeManager } from './ComposeManager'
+import { RealTimeMonitor } from './RealTimeMonitor'
+import { ProcessManager } from './ProcessManager'
 
-export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'images' | 'system' | 'settings'
+export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'images' | 'files' | 'compose' | 'processes' | 'monitor' | 'system' | 'settings'
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('containers')
@@ -35,6 +39,14 @@ export function Dashboard() {
         return <Metrics />
       case 'images':
         return <ImageManager />
+      case 'files':
+        return <FileManager />
+      case 'compose':
+        return <ComposeManager />
+      case 'processes':
+        return <ProcessManager />
+      case 'monitor':
+        return <RealTimeMonitor />
       case 'system':
         return <SystemMonitor />
       case 'settings':
