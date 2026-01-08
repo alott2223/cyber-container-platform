@@ -4,11 +4,15 @@ import { Providers } from './providers'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { MonitoringInitializer } from '@/components/MonitoringInitializer'
 
-export const metadata: Metadata = {
+
+export async function generateMetadata():Promise<Metadata> {
+const metadata: Metadata = {
   title: 'Cyber Container Platform',
   description: 'A modern, self-hosted container management platform',
   keywords: ['docker', 'containers', 'self-hosted', 'management', 'orchestration'],
   authors: [{ name: 'Cyber Container Platform' }],
+}
+return metadata
 }
 
 export const viewport: Viewport = {
