@@ -108,9 +108,8 @@ export function ContainerList({ onShellClick }: ContainerListProps = {}) {
     }
   )
 
-  const filteredContainers = containers.filter(container => {
-    const matchesSearch = container.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         container.image.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredContainers = containers.filter((container:Container) => {
+    const matchesSearch = (container.name || container.image).toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || container.state === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -224,7 +223,7 @@ export function ContainerList({ onShellClick }: ContainerListProps = {}) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredContainers.map((container) => (
+          {filteredContainers.map((container:Container) => (
             <ContainerCard
               key={container.id}
               container={container}

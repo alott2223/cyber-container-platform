@@ -27,12 +27,13 @@ export function LoginForm({ onLogin }: LoginFormProps) {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data.username, data.password)
-      toast.success('Login successful!')
+      await login(data.username, data.password);
+      onLogin?.();
+      toast.success("Login successful!");
     } catch (error) {
-      toast.error('Login failed. Please check your credentials.')
+      toast.error("Login failed. Please check your credentials.");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-cyber-bg flex items-center justify-center relative overflow-hidden">
