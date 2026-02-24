@@ -2,7 +2,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { errorHandler } from './errorHandler'
 import { monitoringService } from './monitoring'
 
-const API_BASE_URL = 'http://localhost:8080/api/v1'
+const API_BASE_URL = '/api/v1'
 
 // Add request timeout
 const REQUEST_TIMEOUT = 10000 // 10 seconds
@@ -65,7 +65,8 @@ class ApiClient {
 
       // Handle errors
       if (!success) {
-        const errorData = await response.json().catch(() => ({}))
+        const cloned = response.clone()
+        const errorData = await cloned.json().catch(() => ({}))
         errorHandler.handleServerError(
           new Error(errorData.message || `HTTP ${response.status}`),
           { component: 'api', action: `${method} ${endpoint}` }

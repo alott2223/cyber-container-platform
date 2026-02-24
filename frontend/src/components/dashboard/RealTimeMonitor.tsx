@@ -24,7 +24,8 @@ export function RealTimeMonitor() {
 
   // WebSocket connection for real-time metrics
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080/ws')
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws`)
     
     ws.onopen = () => {
       setIsConnected(true)

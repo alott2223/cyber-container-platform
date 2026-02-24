@@ -53,7 +53,7 @@ export function ContainerList({ onShellClick }: ContainerListProps = {}) {
       const response = await apiClient.get('/containers')
       if (!response.ok) throw new Error('Failed to fetch containers')
       const data = await response.json()
-      return data.containers
+      return data.containers || []
     },
     {
       refetchInterval: 5000, // Refetch every 5 seconds

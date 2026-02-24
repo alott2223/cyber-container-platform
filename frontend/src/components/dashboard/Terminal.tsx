@@ -100,23 +100,44 @@ export function Terminal() {
 
       let result = ''
       
-      if (cmd === 'docker ps') {
+      if (cmd === 'docker ps' || cmd === 'docker ps -a') {
         const response = await apiClient.get('/containers')
         if (response.ok) {
           const data = await response.json()
-          result = `CONTAINER ID   IMAGE     COMMAND                  CREATED        STATUS        PORTS     NAMES`
-          data.containers.forEach((container: any) => {
-            const ports = container.ports ? container.ports.map((p: any) => `${p.public_port}:${p.private_port}`).join(', ') : '-'
-            result += `\n${container.id.substring(0, 12)}   ${container.image}     "${container.command || 'N/A'}"    ${new Date(container.created).toLocaleDateString()}   ${container.status}   ${ports}   ${container.name}`
-          })
+          const containers = data.containers || []
+          if (containers.length === 0) {
+            result = 'CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS   PORTS   NAMES\n(no containers)'
+          } else {
+            result = `CONTAINER ID   IMAGE                    STATUS                PORTS         NAMES`
+            containers.forEach((container: any) => {
+              const ports = container.ports && container.ports.length > 0 ? container.ports.map((p: any) => `${p.public_port || 0}:${p.private_port}`).join(', ') : '-'
+              result += `\n${container.id.substring(0, 12)}   ${(container.image || '').padEnd(24)}${(container.status || '').padEnd(22)}${ports.padEnd(14)}${container.name}`
+            })
+          }
         } else {
           result = `Error: Failed to fetch containers`
         }
       } else if (cmd === 'docker images') {
-        // This would need a backend endpoint for images
-        result = `REPOSITORY   TAG       IMAGE ID       CREATED        SIZE
-nginx        latest    f6987c8d6ed5   2 weeks ago    142MB
-redis        alpine    59b6e6946534   3 weeks ago    32.4MB`
+        const response = await apiClient.get('/images')
+        if (response.ok) {
+          const data = await response.json()
+          const images = data.images || []
+          if (images.length === 0) {
+            result = 'REPOSITORY   TAG   IMAGE ID   CREATED   SIZE\n(no images)'
+          } else {
+            result = `REPOSITORY                TAG        IMAGE ID       SIZE`
+            images.forEach((img: any) => {
+              const tags = img.RepoTags || ['<none>:<none>']
+              tags.forEach((tag: string) => {
+                const [repo, tagName] = tag.split(':')
+                const size = img.Size ? (img.Size / 1024 / 1024).toFixed(1) + 'MB' : 'N/A'
+                result += `\n${(repo || '<none>').padEnd(22)}    ${(tagName || '<none>').padEnd(10)} ${(img.Id || '').substring(7, 19)}   ${size}`
+              })
+            })
+          }
+        } else {
+          result = 'Error: Failed to fetch images'
+        }
       } else if (cmd === 'docker network ls') {
         const response = await apiClient.get('/networks')
         if (response.ok) {
@@ -141,28 +162,120 @@ redis        alpine    59b6e6946534   3 weeks ago    32.4MB`
           result = `Error: Please specify container ID`
         }
       } else if (cmd.startsWith('docker exec ')) {
-        // Parse: docker exec <container> <command>
-        const parts = cmd.split(' ').slice(2)
-        if (parts.length < 2) {
+        // Parse: docker exec [-it] <container> <command...>
+        const parts = cmd.split(/\s+/).slice(2) // remove "docker exec"
+        // Strip flags like -it, -i, -t, --interactive, --tty, -d, --detach
+        const filtered = parts.filter(p => !p.match(/^-/))
+        if (filtered.length < 2) {
           result = `Error: Usage: docker exec <container> <command>`
         } else {
-          const containerId = parts[0]
-          const execCommand = parts.slice(1)
+          const containerId = filtered[0]
+          const execCommand = filtered.slice(1)
           
-          const response = await apiClient.post(`/containers/${containerId}/exec`, {
-            command: execCommand
-          })
-          
-          if (response.ok) {
-            const data = await response.json()
-            result = data.output || '(no output)'
-          } else {
-            const errorData = await response.json()
-            result = `Error: ${errorData.error || 'Failed to execute command'}`
+          try {
+            const response = await apiClient.post(`/containers/${containerId}/exec`, {
+              command: execCommand
+            })
+            
+            if (response.ok) {
+              const data = await response.json()
+              result = data.output || '(no output)'
+            } else {
+              const errorData = await response.clone().json().catch(() => ({}))
+              result = `Error: ${errorData.error || 'Failed to execute command'}`
+            }
+          } catch (execError) {
+            result = `Error: ${execError instanceof Error ? execError.message : 'Failed to execute command'}`
           }
         }
+      } else if (cmd.startsWith('docker start ')) {
+        const containerId = cmd.split(/\s+/)[2]
+        if (containerId) {
+          const response = await apiClient.post(`/containers/${containerId}/start`)
+          if (response.ok) {
+            result = containerId
+          } else {
+            const err = await response.clone().json().catch(() => ({}))
+            result = `Error: ${err.error || 'Failed to start container'}`
+          }
+        } else {
+          result = 'Error: Please specify container ID or name'
+        }
+      } else if (cmd.startsWith('docker stop ')) {
+        const containerId = cmd.split(/\s+/)[2]
+        if (containerId) {
+          const response = await apiClient.post(`/containers/${containerId}/stop`)
+          if (response.ok) {
+            result = containerId
+          } else {
+            const err = await response.clone().json().catch(() => ({}))
+            result = `Error: ${err.error || 'Failed to stop container'}`
+          }
+        } else {
+          result = 'Error: Please specify container ID or name'
+        }
+      } else if (cmd.startsWith('docker rm ')) {
+        const containerId = cmd.split(/\s+/)[2]
+        if (containerId) {
+          const response = await apiClient.delete(`/containers/${containerId}`)
+          if (response.ok) {
+            result = containerId
+          } else {
+            const err = await response.clone().json().catch(() => ({}))
+            result = `Error: ${err.error || 'Failed to remove container'}`
+          }
+        } else {
+          result = 'Error: Please specify container ID or name'
+        }
+      } else if (cmd.startsWith('docker pull ')) {
+        const imageName = cmd.split(/\s+/)[2]
+        if (imageName) {
+          setOutput(prev => [...prev, `Pulling image ${imageName}...`])
+          const response = await apiClient.post('/images/pull', { image: imageName })
+          if (response.ok) {
+            result = `Successfully pulled ${imageName}`
+          } else {
+            const err = await response.clone().json().catch(() => ({}))
+            result = `Error: ${err.error || 'Failed to pull image'}`
+          }
+        } else {
+          result = 'Error: Please specify image name'
+        }
+      } else if (cmd === 'docker volume ls') {
+        const response = await apiClient.get('/volumes')
+        if (response.ok) {
+          const data = await response.json()
+          const volumes = data.volumes || []
+          if (volumes.length === 0) {
+            result = 'DRIVER   VOLUME NAME\n(no volumes)'
+          } else {
+            result = 'DRIVER    VOLUME NAME'
+            volumes.forEach((vol: any) => {
+              result += `\n${(vol.driver || 'local').padEnd(10)}${vol.name}`
+            })
+          }
+        } else {
+          result = 'Error: Failed to fetch volumes'
+        }
+      } else if (cmd === 'docker info' || cmd === 'docker system info') {
+        const response = await apiClient.get('/system/info')
+        if (response.ok) {
+          const data = await response.json()
+          result = `Containers: ${data.containers || 0}
+ Running: ${data.containers_running || 0}
+ Paused: ${data.containers_paused || 0}
+ Stopped: ${data.containers_stopped || 0}
+Images: ${data.images || 0}
+Server Version: ${data.docker_version || 'N/A'}
+Operating System: ${data.os || 'N/A'}
+Architecture: ${data.architecture || 'N/A'}
+CPUs: ${data.cpus || 'N/A'}
+Total Memory: ${data.memory_limit ? (data.memory_limit / 1024 / 1024 / 1024).toFixed(1) + 'GB' : 'N/A'}`
+        } else {
+          result = 'Error: Failed to fetch system info'
+        }
       } else {
-        result = `Command not found: ${command}`
+        result = `Command not found: ${command}\nType 'help' for available commands`
       }
       
       setOutput(prev => [...prev, result, ''])

@@ -25,7 +25,7 @@ export function VolumeManager() {
       const response = await apiClient.get('/volumes')
       if (!response.ok) throw new Error('Failed to fetch volumes')
       const data = await response.json()
-      return data.volumes.map((vol: any) => ({
+      return (data.volumes || []).map((vol: any) => ({
         ...vol,
         created_at: vol.created_at || new Date().toISOString(), // Handle missing date
       }))

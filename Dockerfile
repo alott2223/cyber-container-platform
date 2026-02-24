@@ -3,13 +3,13 @@ FROM node:18-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 COPY frontend/ ./
 RUN npm run build
 
 # Go backend stage
-FROM golang:1.21-alpine AS backend-builder
+FROM golang:1.24-alpine AS backend-builder
 
 WORKDIR /app/backend
 COPY backend/go.mod backend/go.sum ./

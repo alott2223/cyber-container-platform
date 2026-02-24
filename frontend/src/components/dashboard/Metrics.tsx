@@ -36,7 +36,7 @@ export function Metrics() {
       const response = await apiClient.get('/containers')
       if (!response.ok) throw new Error('Failed to fetch container stats')
       const data = await response.json()
-      return data.containers
+      return data.containers || []
     },
     {
       refetchInterval: 5000,

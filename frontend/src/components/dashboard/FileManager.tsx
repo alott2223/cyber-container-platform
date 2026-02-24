@@ -38,7 +38,7 @@ export function FileManager() {
     const response = await apiClient.get('/containers')
     if (!response.ok) throw new Error('Failed to fetch containers')
     const data = await response.json()
-    return data.containers.filter((c: any) => c.state === 'running')
+    return (data.containers || []).filter((c: any) => c.state === 'running')
   })
 
   // Get files in current directory

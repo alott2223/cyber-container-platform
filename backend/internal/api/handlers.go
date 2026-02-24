@@ -1,6 +1,7 @@
 package api
 
 import (
+	"cyber-container-platform/internal/docker"
 	"fmt"
 	"io"
 	"net/http"
@@ -117,6 +118,10 @@ func (s *Server) listContainers(c *gin.Context) {
 		return
 	}
 
+	if containers == nil {
+		containers = []docker.ContainerInfo{}
+	}
+
 	c.JSON(http.StatusOK, gin.H{"containers": containers})
 }
 
@@ -140,7 +145,7 @@ func (s *Server) createContainer(c *gin.Context) {
 	// Sanitize inputs
 	req.Name = strings.TrimSpace(req.Name)
 	req.Image = strings.TrimSpace(req.Image)
-	
+
 	// Validate container name format
 	if !isValidContainerName(req.Name) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid container name format"})
@@ -195,8 +200,27 @@ func (s *Server) createContainer(c *gin.Context) {
 
 	containerID, err := s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		// Auto-pull image if not found locally
+		if strings.Contains(err.Error(), "No such image") {
+			pullReader, pullErr := s.dockerClient.PullImage(req.Image)
+			if pullErr != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to pull image %s: %v", req.Image, pullErr)})
+				return
+			}
+			// Drain the pull output stream to completion
+			io.Copy(io.Discard, pullReader)
+			pullReader.Close()
+
+			// Retry container creation after pull
+			containerID, err = s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	// Start the container after creation
@@ -297,27 +321,27 @@ func (s *Server) getContainerStats(c *gin.Context) {
 
 func (s *Server) execContainer(c *gin.Context) {
 	id := c.Param("id")
-	
+
 	var req struct {
 		Command []string `json:"command"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
-	
+
 	if len(req.Command) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Command is required"})
 		return
 	}
-	
+
 	output, err := s.dockerClient.ExecContainer(id, req.Command)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"output": output})
 }
 
@@ -326,6 +350,10 @@ func (s *Server) listNetworks(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	if networks == nil {
+		networks = []docker.NetworkInfo{}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"networks": networks})
@@ -390,6 +418,10 @@ func (s *Server) listVolumes(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	if volumes == nil {
+		volumes = []docker.VolumeInfo{}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"volumes": volumes})
@@ -472,6 +504,10 @@ func (s *Server) listTemplates(c *gin.Context) {
 			"config":      config,
 			"created_at":  createdAt,
 		})
+	}
+
+	if templates == nil {
+		templates = []map[string]interface{}{}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"templates": templates})
@@ -577,6 +613,11 @@ func (s *Server) listImages(c *gin.Context) {
 		return
 	}
 
+	if images == nil {
+		c.JSON(http.StatusOK, gin.H{"images": []interface{}{}})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"images": images})
 }
 
@@ -588,16 +629,16 @@ func (s *Server) getSystemInfo(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"containers":      info.Containers,
+		"containers":         info.Containers,
 		"containers_running": info.ContainersRunning,
 		"containers_paused":  info.ContainersPaused,
 		"containers_stopped": info.ContainersStopped,
-		"images":          info.Images,
-		"memory_limit":    info.MemTotal,
-		"cpus":            info.NCPU,
-		"docker_version":  info.ServerVersion,
-		"os":              info.OperatingSystem,
-		"architecture":    info.Architecture,
+		"images":             info.Images,
+		"memory_limit":       info.MemTotal,
+		"cpus":               info.NCPU,
+		"docker_version":     info.ServerVersion,
+		"os":                 info.OperatingSystem,
+		"architecture":       info.Architecture,
 	})
 }
 
@@ -605,29 +646,29 @@ func (s *Server) pullImage(c *gin.Context) {
 	var req struct {
 		Image string `json:"image"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
-	
+
 	if req.Image == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Image name is required"})
 		return
 	}
-	
+
 	reader, err := s.dockerClient.PullImage(req.Image)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	defer reader.Close()
-	
+
 	// Read the pull progress
 	progress, _ := io.ReadAll(reader)
-	
+
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Image pulled successfully",
+		"message":  "Image pulled successfully",
 		"progress": string(progress),
 	})
 }
@@ -638,13 +679,13 @@ func (s *Server) removeImage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Image ID is required"})
 		return
 	}
-	
+
 	err := s.dockerClient.RemoveImage(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"message": "Image removed successfully"})
 }
 
@@ -654,19 +695,19 @@ func isValidContainerName(name string) bool {
 	if len(name) < 1 || len(name) > 63 {
 		return false
 	}
-	
+
 	// Must start and end with alphanumeric
 	if !isAlphanumeric(rune(name[0])) || !isAlphanumeric(rune(name[len(name)-1])) {
 		return false
 	}
-	
+
 	// Can contain alphanumeric, hyphens, underscores
 	for _, char := range name {
 		if !isAlphanumeric(char) && char != '-' && char != '_' {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -679,7 +720,7 @@ func isValidImageName(image string) bool {
 	if len(image) < 1 || len(image) > 255 {
 		return false
 	}
-	
+
 	// Should not contain dangerous characters
 	dangerousChars := []string{"..", "//", "\\", "<", ">", "|", "&", "`", "$", ";", "(", ")"}
 	for _, char := range dangerousChars {
@@ -687,7 +728,7 @@ func isValidImageName(image string) bool {
 			return false
 		}
 	}
-	
+
 	return true
 }
 
@@ -698,14 +739,14 @@ func sanitizeString(input string) string {
 	input = strings.ReplaceAll(input, "\n", "")
 	input = strings.ReplaceAll(input, "\t", "")
 	input = strings.ReplaceAll(input, "\x00", "") // Remove null bytes
-	
+
 	// Additional security: remove any remaining control characters
 	for i := 0; i < len(input); i++ {
 		if input[i] < 32 && input[i] != 9 && input[i] != 10 && input[i] != 13 {
 			input = strings.ReplaceAll(input, string(input[i]), "")
 		}
 	}
-	
+
 	return input
 }
 

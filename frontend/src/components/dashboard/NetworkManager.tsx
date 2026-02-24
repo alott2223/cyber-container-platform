@@ -31,7 +31,7 @@ export function NetworkManager() {
       const response = await apiClient.get('/networks')
       if (!response.ok) throw new Error('Failed to fetch networks')
       const data = await response.json()
-      return data.networks
+      return data.networks || []
     }
   )
 

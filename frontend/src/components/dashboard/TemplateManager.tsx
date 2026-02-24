@@ -11,34 +11,35 @@ export function TemplateManager() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const queryClient = useQueryClient()
   
-  const categories = ['all', 'web', 'database', 'cache', 'language', 'utility']
+  const categories = ['all', 'os', 'web', 'database', 'cache', 'language', 'utility']
 
   const deployTemplate = async (template: ContainerTemplate) => {
     try {
       const portMapping: Record<string, string> = {}
-      Object.entries(template.ports).forEach(([host, container]) => {
-        if (host && container) {
-          portMapping[host] = container
-        }
-      })
+      if (template.ports) {
+        Object.entries(template.ports).forEach(([host, container]) => {
+          if (host && container) {
+            portMapping[host] = container
+          }
+        })
+      }
 
       // Convert volumes array to map format expected by backend
       const volumeMapping: Record<string, string> = {}
-      template.volumes.forEach((volume) => {
-        if (volume && volume.trim()) {
-          // Each volume string format is assumed to be "host_path:container_path"
-          // If it's just a path, we'll create a simple mapping
-          if (volume.includes(':')) {
-            const [host, container] = volume.split(':')
-            if (host && container) {
-              volumeMapping[host] = container
+      if (template.volumes) {
+        template.volumes.forEach((volume) => {
+          if (volume && volume.trim()) {
+            if (volume.includes(':')) {
+              const [host, container] = volume.split(':')
+              if (host && container) {
+                volumeMapping[host] = container
+              }
+            } else {
+              volumeMapping[volume] = volume
             }
-          } else {
-            // If no colon, use the volume as both host and container path
-            volumeMapping[volume] = volume
           }
-        }
-      })
+        })
+      }
 
       const payload: any = {
         name: `${template.id}-${Date.now()}`,
@@ -49,7 +50,7 @@ export function TemplateManager() {
       if (Object.keys(portMapping).length > 0) {
         payload.ports = portMapping
       }
-      if (Object.keys(template.environment).length > 0) {
+      if (Object.keys(template.environment || {}).length > 0) {
         payload.environment = template.environment
       }
       if (Object.keys(volumeMapping).length > 0) {
@@ -112,7 +113,7 @@ export function TemplateManager() {
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-3">
-                <span className="text-3xl">{template.icon}</span>
+                <span className="text-3xl">{template.icon || '📦'}</span>
                 <div>
                   <h3 className="text-lg font-medium text-white">{template.name}</h3>
                   <p className="text-xs text-gray-400 capitalize">{template.category}</p>
@@ -121,9 +122,10 @@ export function TemplateManager() {
               <span className={`px-2 py-1 text-xs rounded ${
                 template.difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
                 template.difficulty === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                'bg-red-500/20 text-red-400'
+                template.difficulty === 'hard' ? 'bg-red-500/20 text-red-400' :
+                'bg-gray-500/20 text-gray-400'
               }`}>
-                {template.difficulty}
+                {template.difficulty || 'easy'}
               </span>
             </div>
 
@@ -136,7 +138,7 @@ export function TemplateManager() {
             </div>
 
             {/* Ports */}
-            {Object.keys(template.ports).length > 0 && (
+            {template.ports && Object.keys(template.ports).length > 0 && (
               <div className="mb-4">
                 <span className="text-xs text-gray-500">Ports: </span>
                 <span className="text-xs text-cyber-accent">
