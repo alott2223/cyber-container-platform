@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"cyber-container-platform/internal/docker"
 	"cyber-container-platform/internal/opsec"
 
 	"github.com/docker/docker/api/types/container"
@@ -121,13 +122,13 @@ func (s *Server) deployOPSECProfile(c *gin.Context) {
 			containerID, err = s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
 		}
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": docker.FriendlyError(err)})
 			return
 		}
 	}
 
 	if err := s.dockerClient.StartContainer(containerID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Created but failed to start: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": docker.FriendlyError(err)})
 		return
 	}
 

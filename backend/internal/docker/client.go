@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -334,4 +335,17 @@ func (c *Client) RemoveImage(imageID string) error {
 func (c *Client) Ping() error {
 	_, err := c.cli.Ping(context.Background())
 	return err
+}
+
+// FriendlyError returns a clearer message for common Docker environment issues
+func FriendlyError(err error) string {
+	if err == nil {
+		return ""
+	}
+	msg := err.Error()
+	if strings.Contains(msg, "overlay") && strings.Contains(strings.ToLower(msg), "invalid argument") {
+		return msg + " — Docker overlay mounts are not supported in this environment. " +
+			"Run: sudo ./scripts/fix-docker-overlay.sh (see docs/troubleshooting-docker.md)"
+	}
+	return msg
 }

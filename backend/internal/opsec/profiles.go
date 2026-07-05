@@ -146,7 +146,6 @@ func ApplySecurityProfile(hostConfig *container.HostConfig, level SecurityLevel,
 
 	hostConfig.SecurityOpt = []string{
 		"no-new-privileges:true",
-		"seccomp=default",
 		"apparmor=docker-default",
 	}
 

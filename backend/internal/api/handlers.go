@@ -352,11 +352,11 @@ func (s *Server) createContainer(c *gin.Context) {
 			// Retry container creation after pull
 			containerID, err = s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": docker.FriendlyError(err)})
 				return
 			}
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": docker.FriendlyError(err)})
 			return
 		}
 	}
@@ -364,7 +364,7 @@ func (s *Server) createContainer(c *gin.Context) {
 	// Start the container after creation
 	err = s.dockerClient.StartContainer(containerID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Container created but failed to start: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": docker.FriendlyError(err)})
 		return
 	}
 
