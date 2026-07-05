@@ -32,6 +32,10 @@ COPY --from=builder /app/main .
 # Copy configuration
 COPY backend/config/ ./config/
 
+# Copy OPSEC scripts
+COPY opsec/scripts/ ./opsec/scripts/
+RUN chmod +x ./opsec/scripts/*.sh
+
 # Create non-root user
 RUN adduser -D -s /bin/sh cyber
 RUN chown -R cyber:cyber /app

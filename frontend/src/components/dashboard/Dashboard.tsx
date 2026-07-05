@@ -17,8 +17,9 @@ import { FileManager } from './FileManager'
 import { ComposeManager } from './ComposeManager'
 import { RealTimeMonitor } from './RealTimeMonitor'
 import { ProcessManager } from './ProcessManager'
+import { OPSECManager } from './OPSECManager'
 
-export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'images' | 'files' | 'compose' | 'processes' | 'monitor' | 'system' | 'settings'
+export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'images' | 'files' | 'compose' | 'processes' | 'monitor' | 'system' | 'opsec' | 'settings'
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('containers')
@@ -51,6 +52,8 @@ export function Dashboard() {
         return <RealTimeMonitor />
       case 'system':
         return <SystemMonitor />
+      case 'opsec':
+        return <OPSECManager />
       case 'settings':
         return <Settings />
       default:

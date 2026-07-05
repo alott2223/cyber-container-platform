@@ -3,6 +3,7 @@ package api
 import (
 	"cyber-container-platform/internal/auth"
 	"cyber-container-platform/internal/docker"
+	"cyber-container-platform/internal/opsec"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,12 +29,14 @@ type RegisterRequest struct {
 }
 
 type CreateContainerRequest struct {
-	Name        string            `json:"name" binding:"required"`
-	Image       string            `json:"image" binding:"required"`
-	Ports       map[string]string `json:"ports"`
-	Environment map[string]string `json:"environment"`
-	Volumes     map[string]string `json:"volumes"`
-	Network     string            `json:"network"`
+	Name            string            `json:"name" binding:"required"`
+	Image           string            `json:"image" binding:"required"`
+	Ports           map[string]string `json:"ports"`
+	Environment     map[string]string `json:"environment"`
+	Volumes         map[string]string `json:"volumes"`
+	Network         string            `json:"network"`
+	SecurityProfile string            `json:"security_profile"`
+	SecurityLevel   string            `json:"security_level"`
 }
 
 type CreateNetworkRequest struct {
@@ -319,6 +322,22 @@ func (s *Server) createContainer(c *gin.Context) {
 			binds = append(binds, hostPath+":"+containerPath)
 		}
 		hostConfig.Binds = binds
+	}
+
+	// Apply OPSEC security profile if specified
+	if req.SecurityProfile != "" {
+		profile := opsec.GetProfile(req.SecurityProfile)
+		if profile != nil {
+			opsec.ApplySecurityProfile(hostConfig, profile.SecurityLevel, profile)
+			config.Labels = map[string]string{
+				"cyber.opsec.profile": profile.ID,
+				"cyber.opsec.level":   string(profile.SecurityLevel),
+			}
+			scriptBinds := opsec.ScriptMountBinds()
+			hostConfig.Binds = append(hostConfig.Binds, scriptBinds...)
+		}
+	} else if req.SecurityLevel != "" {
+		opsec.ApplySecurityProfile(hostConfig, opsec.SecurityLevel(req.SecurityLevel), nil)
 	}
 
 	containerID, err := s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)

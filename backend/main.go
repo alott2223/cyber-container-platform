@@ -9,6 +9,7 @@ import (
 	"cyber-container-platform/internal/api"
 	"cyber-container-platform/internal/auth"
 	"cyber-container-platform/internal/config"
+	cryptovault "cyber-container-platform/internal/crypto"
 	"cyber-container-platform/internal/database"
 	"cyber-container-platform/internal/docker"
 	"cyber-container-platform/internal/websocket"
@@ -39,7 +40,12 @@ func main() {
 	wsHub := websocket.NewHub()
 	go wsHub.Run()
 
-	server := api.NewServer(cfg, db, dockerClient, wsHub)
+	vault, err := cryptovault.NewVault(cfg.JWTSecret)
+	if err != nil {
+		log.Fatal("Failed to initialize encryption vault:", err)
+	}
+
+	server := api.NewServer(cfg, db, dockerClient, wsHub, vault)
 
 	log.Printf("Starting Cyber Container Platform on port %s (environment: %s)", cfg.Port, cfg.Environment)
 	if err := server.Start(); err != nil {

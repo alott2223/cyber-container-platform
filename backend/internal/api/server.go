@@ -7,6 +7,7 @@ import (
 
 	"cyber-container-platform/internal/auth"
 	"cyber-container-platform/internal/config"
+	"cyber-container-platform/internal/crypto"
 	"cyber-container-platform/internal/database"
 	"cyber-container-platform/internal/docker"
 	"cyber-container-platform/internal/logger"
@@ -26,9 +27,10 @@ type Server struct {
 	logger       *logger.Logger
 	metrics      *monitoring.Metrics
 	loginLockout *auth.LoginLockout
+	vault        *crypto.Vault
 }
 
-func NewServer(cfg *config.Config, db *database.Database, dockerClient *docker.Client, wsHub *websocket.Hub) *Server {
+func NewServer(cfg *config.Config, db *database.Database, dockerClient *docker.Client, wsHub *websocket.Hub, vault *crypto.Vault) *Server {
 	server := &Server{
 		config:       cfg,
 		db:           db,
@@ -37,6 +39,7 @@ func NewServer(cfg *config.Config, db *database.Database, dockerClient *docker.C
 		logger:       logger.New("api", logger.INFO),
 		metrics:      monitoring.GlobalMetrics,
 		loginLockout: auth.NewLoginLockout(),
+		vault:        vault,
 	}
 
 	server.setupRouter()
@@ -165,6 +168,27 @@ func (s *Server) setupRouter() {
 		system.Use(s.authMiddleware())
 		{
 			system.GET("/info", s.getSystemInfo)
+		}
+
+		// OPSEC — operational security profiles and scripts
+		opsecGroup := api.Group("/opsec")
+		opsecGroup.Use(s.authMiddleware())
+		{
+			opsecGroup.GET("/profiles", s.listOPSECProfiles)
+			opsecGroup.GET("/scripts", s.listOPSECScripts)
+			opsecGroup.GET("/scripts/:id", s.getOPSECScript)
+			opsecGroup.POST("/deploy", s.deployOPSECProfile)
+			opsecGroup.GET("/encryption", s.getEncryptionInfo)
+		}
+
+		// Encrypted secrets vault (AES-256-GCM)
+		secrets := api.Group("/secrets")
+		secrets.Use(s.authMiddleware())
+		{
+			secrets.GET("", s.listSecrets)
+			secrets.POST("", s.storeSecret)
+			secrets.GET("/:name", s.getSecret)
+			secrets.DELETE("/:name", s.deleteSecret)
 		}
 	}
 

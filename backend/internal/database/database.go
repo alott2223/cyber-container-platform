@@ -97,6 +97,16 @@ func (d *Database) initTables() error {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users (id)
 		)`,
+		`CREATE TABLE IF NOT EXISTS encrypted_secrets (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT UNIQUE NOT NULL,
+			encrypted_value TEXT NOT NULL,
+			category TEXT DEFAULT 'general',
+			created_by INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (created_by) REFERENCES users (id)
+		)`,
 	}
 
 	for _, query := range queries {

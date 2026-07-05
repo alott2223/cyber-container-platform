@@ -51,6 +51,7 @@ func setupTestServer(t *testing.T) *Server {
 		wsHub:        websocket.NewHub(),
 		metrics:      monitoring.GlobalMetrics,
 		loginLockout: auth.NewLoginLockout(),
+		vault:        nil,
 	}
 	server.setupRouter()
 
