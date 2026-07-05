@@ -311,6 +311,17 @@ func (c *Client) PullImage(imageName string) (io.ReadCloser, error) {
 	return c.cli.ImagePull(context.Background(), imageName, options)
 }
 
+// EnsureImage pulls an image if missing and waits for the pull to complete
+func (c *Client) EnsureImage(imageName string) error {
+	reader, err := c.PullImage(imageName)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+	_, err = io.Copy(io.Discard, reader)
+	return err
+}
+
 // RemoveImage removes a Docker image
 func (c *Client) RemoveImage(imageID string) error {
 	_, err := c.cli.ImageRemove(context.Background(), imageID, types.ImageRemoveOptions{

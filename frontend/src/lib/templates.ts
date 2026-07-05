@@ -116,7 +116,7 @@ export const containerTemplates: ContainerTemplate[] = [
     name: 'Alpine Linux',
     description: 'Minimal Linux image for lightweight containers.',
     category: 'os',
-    image: 'alpine:3.20',
+    image: 'alpine:3.21',
     icon: '🏔️',
     difficulty: 'easy',
     documentation: 'https://wiki.alpinelinux.org/',

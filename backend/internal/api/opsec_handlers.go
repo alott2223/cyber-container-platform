@@ -113,13 +113,11 @@ func (s *Server) deployOPSECProfile(c *gin.Context) {
 
 	containerID, err := s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
 	if err != nil {
-		if strings.Contains(err.Error(), "No such image") {
-			pullReader, pullErr := s.dockerClient.PullImage(profile.Image)
-			if pullErr != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to pull image: %v", pullErr)})
+		if isMissingImageError(err) {
+			if pullErr := s.dockerClient.EnsureImage(profile.Image); pullErr != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to pull image %s: %v", profile.Image, pullErr)})
 				return
 			}
-			pullReader.Close()
 			containerID, err = s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
 		}
 		if err != nil {
@@ -310,6 +308,14 @@ func truncateString(s string, max int) string {
 		return s
 	}
 	return s[:max] + "\n... (truncated)"
+}
+
+func isMissingImageError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "no such image") || strings.Contains(msg, "unable to find image")
 }
 
 func addPortBindings(config *container.Config, hostConfig *container.HostConfig, ports map[string]string) {

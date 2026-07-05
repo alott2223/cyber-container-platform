@@ -65,7 +65,7 @@ var Scripts = []Script{
 var Profiles = []Profile{
 	{
 		ID: "alpine-opsec", Name: "Alpine OPSEC", Description: "Minimal hardened Alpine Linux with full OPSEC script suite preloaded",
-		Image: "alpine:3.20", SecurityLevel: LevelMaximum, Icon: "🏔️", Category: "linux",
+		Image: "alpine:3.21", SecurityLevel: LevelMaximum, Icon: "🏔️", Category: "linux",
 		Scripts: []string{"opsec-baseline", "init-hardening", "network-lockdown", "memory-protection"},
 		ReadOnlyRoot: true, NoNewPrivileges: true,
 		Tmpfs: []string{"/tmp:rw,noexec,nosuid,size=64m", "/run:rw,noexec,nosuid,size=32m"},
@@ -107,7 +107,7 @@ var Profiles = []Profile{
 	},
 	{
 		ID: "vault-container", Name: "Encrypted Vault", Description: "Air-gapped secrets vault with AES-256 at-rest encryption and secure wipe",
-		Image: "alpine:3.20", SecurityLevel: LevelAirgap, Icon: "🔒", Category: "security",
+		Image: "alpine:3.21", SecurityLevel: LevelAirgap, Icon: "🔒", Category: "security",
 		Scripts: []string{"opsec-baseline", "secure-wipe", "memory-protection", "container-isolation"},
 		ReadOnlyRoot: true, NoNewPrivileges: true,
 		NetworkMode: "none",

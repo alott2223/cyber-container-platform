@@ -148,7 +148,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-xs text-gray-500">
-            © 2024 Cyber Container Platform. Built for privacy and performance.
+            © 2026 Cyber Container Platform. Built for privacy and performance.
           </p>
         </div>
       </div>

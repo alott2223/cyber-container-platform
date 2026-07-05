@@ -343,15 +343,11 @@ func (s *Server) createContainer(c *gin.Context) {
 	containerID, err := s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
 	if err != nil {
 		// Auto-pull image if not found locally
-		if strings.Contains(err.Error(), "No such image") {
-			pullReader, pullErr := s.dockerClient.PullImage(req.Image)
-			if pullErr != nil {
+		if isMissingImageError(err) {
+			if pullErr := s.dockerClient.EnsureImage(req.Image); pullErr != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to pull image %s: %v", req.Image, pullErr)})
 				return
 			}
-			// Drain the pull output stream to completion
-			io.Copy(io.Discard, pullReader)
-			pullReader.Close()
 
 			// Retry container creation after pull
 			containerID, err = s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
