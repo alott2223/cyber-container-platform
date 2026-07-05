@@ -2,7 +2,7 @@
 
 A modern, self-hosted container management platform with a cyberpunk-inspired interface.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Docker Engine 20.10+
@@ -12,25 +12,84 @@ A modern, self-hosted container management platform with a cyberpunk-inspired in
 
 ### Deployment
 
-#### Linux/macOS
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
 
-#### Windows
-```cmd
-deploy.bat
-```
+The deploy script automatically:
+- Generates a `.env` file with secure `JWT_SECRET` and `ADMIN_PASSWORD` if one does not exist
+- Creates SSL certificates for nginx
+- Builds and starts all services with health checks
 
 ### Manual Deployment
-```bash
-# Build and start services
-docker-compose -f docker-compose.prod.yml up --build -d
 
-# Check health
-curl http://localhost/health
+```bash
+cp .env.example .env
+# Edit .env and set JWT_SECRET and ADMIN_PASSWORD
+
+docker-compose -f docker-compose.prod.yml up --build -d
+curl http://localhost:8080/health
 ```
+
+## Security Requirements
+
+Production deployments **require** the following environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `JWT_SECRET` | Minimum 32 characters. Generate with `openssl rand -hex 32` |
+| `ADMIN_PASSWORD` | Minimum 12 characters with uppercase, lowercase, number, and special character |
+| `ENVIRONMENT` | Set to `production` |
+| `ALLOW_REGISTRATION` | Keep `false` unless you need open signup |
+
+### Authentication
+
+- Database-backed user accounts with bcrypt password hashing
+- Login rate limiting and account lockout after failed attempts
+- Audit logging for authentication events
+- Password change required after first-run auto-generated credentials
+- JWT tokens with configurable expiry
+
+### Default Behavior
+
+- Registration is **disabled** by default
+- On first run (development), a secure admin password is auto-generated and printed to server logs
+- In production, you must set `ADMIN_PASSWORD` before starting the server
+
+## Configuration
+
+See `.env.example` for all available options including:
+- `ALLOWED_ORIGINS` - CORS configuration
+- `MAX_LOGIN_ATTEMPTS` / `LOCKOUT_DURATION` - Brute force protection
+- `JWT_EXPIRY` - Token lifetime
+- `BCRYPT_COST` - Password hashing strength
+
+## API Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /health` | Health check with database and Docker status |
+| `POST /api/v1/auth/login` | Authenticate |
+| `POST /api/v1/auth/change-password` | Change password (authenticated) |
+| `GET /api/v1/auth/profile` | Get current user profile |
+
+## Health Checks
+
+The health endpoint returns:
+- `healthy` - All systems operational
+- `degraded` - Docker unavailable but database OK
+- `unhealthy` - Database unavailable
+
+## Post-Deployment Checklist
+
+1. Log in with credentials from `.env`
+2. Change the admin password in Settings
+3. Configure production SSL certificates in `nginx/ssl/`
+4. Update `ALLOWED_ORIGINS` in `.env` for your domain
+5. Set up log rotation and database backups for `./data/`
+6. Review audit logs in the SQLite database
+
 
 ## 📊 Service Architecture
 

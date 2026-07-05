@@ -314,3 +314,9 @@ func (c *Client) RemoveImage(imageID string) error {
 	})
 	return err
 }
+
+// Ping checks Docker daemon connectivity
+func (c *Client) Ping() error {
+	_, err := c.cli.Ping(context.Background())
+	return err
+}
