@@ -32,6 +32,7 @@ const mockHandlers = {
   onStop: jest.fn(),
   onRemove: jest.fn(),
   onShell: jest.fn(),
+  onOpenConsole: jest.fn(),
   isLoading: false,
 }
 

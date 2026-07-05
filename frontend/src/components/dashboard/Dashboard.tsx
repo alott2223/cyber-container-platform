@@ -18,18 +18,26 @@ import { ComposeManager } from './ComposeManager'
 import { RealTimeMonitor } from './RealTimeMonitor'
 import { ProcessManager } from './ProcessManager'
 import { OPSECManager } from './OPSECManager'
+import { ContainerConsole } from './ContainerConsole'
+import type { Container } from './ContainerList'
 
 export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'images' | 'files' | 'compose' | 'processes' | 'monitor' | 'system' | 'opsec' | 'settings'
 
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('containers')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [consoleContainer, setConsoleContainer] = useState<Container | null>(null)
   const { user } = useAuthStore()
 
   const renderContent = () => {
     switch (activeTab) {
       case 'containers':
-        return <ContainerList onShellClick={() => setActiveTab('terminal')} />
+        return (
+          <ContainerList
+            onShellClick={() => setActiveTab('terminal')}
+            onOpenConsole={(container) => setConsoleContainer(container)}
+          />
+        )
       case 'networks':
         return <NetworkManager />
       case 'volumes':
@@ -57,7 +65,7 @@ export function Dashboard() {
       case 'settings':
         return <Settings />
       default:
-        return <ContainerList onShellClick={() => setActiveTab('terminal')} />
+        return <ContainerList onShellClick={() => setActiveTab('terminal')} onOpenConsole={(c) => setConsoleContainer(c)} />
     }
   }
 
@@ -95,6 +103,13 @@ export function Dashboard() {
           {renderContent()}
         </main>
       </div>
+
+      {consoleContainer && (
+        <ContainerConsole
+          container={consoleContainer}
+          onClose={() => setConsoleContainer(null)}
+        />
+      )}
     </div>
   )
 }

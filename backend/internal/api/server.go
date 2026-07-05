@@ -90,10 +90,13 @@ func (s *Server) setupRouter() {
 		s.router.GET("/metrics", s.getMetrics)
 	}
 
-	// WebSocket endpoint
+	// WebSocket endpoints
 	s.router.GET("/ws", func(c *gin.Context) {
 		s.wsHub.ServeWS(c.Writer, c.Request)
 	})
+
+	// Interactive container shell (fullscreen terminal)
+	s.router.GET("/ws/containers/:id/exec", s.containerExecWS)
 
 	// API routes
 	api := s.router.Group("/api/v1")
