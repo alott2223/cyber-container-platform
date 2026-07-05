@@ -47,6 +47,7 @@ func (d *Database) initTables() error {
 			password_hash TEXT NOT NULL,
 			email TEXT,
 			role TEXT DEFAULT 'user',
+			must_change_password INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
 		`CREATE TABLE IF NOT EXISTS container_templates (
@@ -84,12 +85,42 @@ func (d *Database) initTables() error {
 			message TEXT NOT NULL,
 			timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS audit_logs (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER,
+			username TEXT,
+			action TEXT NOT NULL,
+			resource TEXT,
+			details TEXT,
+			ip_address TEXT,
+			success INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users (id)
+		)`,
+		`CREATE TABLE IF NOT EXISTS encrypted_secrets (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT UNIQUE NOT NULL,
+			encrypted_value TEXT NOT NULL,
+			category TEXT DEFAULT 'general',
+			created_by INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (created_by) REFERENCES users (id)
+		)`,
 	}
 
 	for _, query := range queries {
 		if _, err := d.db.Exec(query); err != nil {
 			return fmt.Errorf("failed to execute query: %w", err)
 		}
+	}
+
+	// Migrate existing databases
+	migrations := []string{
+		`ALTER TABLE users ADD COLUMN must_change_password INTEGER DEFAULT 0`,
+	}
+	for _, query := range migrations {
+		d.db.Exec(query)
 	}
 
 	return nil

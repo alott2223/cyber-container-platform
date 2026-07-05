@@ -1,7 +1,9 @@
 package api
 
 import (
+	"cyber-container-platform/internal/auth"
 	"cyber-container-platform/internal/docker"
+	"cyber-container-platform/internal/opsec"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +15,6 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type LoginRequest struct {
@@ -28,12 +29,14 @@ type RegisterRequest struct {
 }
 
 type CreateContainerRequest struct {
-	Name        string            `json:"name" binding:"required"`
-	Image       string            `json:"image" binding:"required"`
-	Ports       map[string]string `json:"ports"`
-	Environment map[string]string `json:"environment"`
-	Volumes     map[string]string `json:"volumes"`
-	Network     string            `json:"network"`
+	Name            string            `json:"name" binding:"required"`
+	Image           string            `json:"image" binding:"required"`
+	Ports           map[string]string `json:"ports"`
+	Environment     map[string]string `json:"environment"`
+	Volumes         map[string]string `json:"volumes"`
+	Network         string            `json:"network"`
+	SecurityProfile string            `json:"security_profile"`
+	SecurityLevel   string            `json:"security_level"`
 }
 
 type CreateNetworkRequest struct {
@@ -60,55 +63,178 @@ func (s *Server) login(c *gin.Context) {
 		return
 	}
 
-	// Simple authentication - in production, use proper user management
-	if req.Username == "admin" && req.Password == "admin" {
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"username": req.Username,
-			"exp":      time.Now().Add(time.Hour * 24).Unix(),
+	clientIP := c.ClientIP()
+	lockKey := fmt.Sprintf("%s:%s", clientIP, req.Username)
+
+	if locked, remaining := s.loginLockout.IsLocked(lockKey, s.config.MaxLoginAttempts, s.config.LockoutDuration); locked {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"error":       "Too many failed login attempts. Try again later.",
+			"retry_after": remaining.Seconds(),
 		})
-
-		tokenString, err := token.SignedString([]byte(s.config.JWTSecret))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{"token": tokenString})
 		return
 	}
 
-	c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+	user, err := s.db.GetUserByUsername(req.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Authentication service unavailable"})
+		return
+	}
+
+	if user == nil || !auth.CheckPassword(req.Password, user.PasswordHash) {
+		s.loginLockout.RecordFailure(lockKey, s.config.LockoutDuration)
+		userID := (*int64)(nil)
+		if user != nil {
+			userID = &user.ID
+		}
+		_ = s.db.LogAuditEvent(userID, req.Username, "login", "auth", "Invalid credentials", clientIP, false)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	s.loginLockout.Reset(lockKey)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"username": user.Username,
+		"user_id":  user.ID,
+		"role":     user.Role,
+		"exp":      time.Now().Add(s.config.JWTExpiry).Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(s.config.JWTSecret))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	_ = s.db.LogAuditEvent(&user.ID, user.Username, "login", "auth", "Successful login", clientIP, true)
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": tokenString,
+		"user": gin.H{
+			"username":             user.Username,
+			"role":                 user.Role,
+			"must_change_password": user.MustChangePassword,
+		},
+	})
+}
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+	NewPassword     string `json:"new_password" binding:"required"`
 }
 
 func (s *Server) register(c *gin.Context) {
+	if !s.config.AllowRegistration {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Registration is disabled"})
+		return
+	}
+
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err := auth.ValidateUsername(req.Username); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := auth.ValidatePassword(req.Password); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(req.Password, s.config.BcryptCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
-	// Insert user into database
-	_, err = s.db.GetDB().Exec(
-		"INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)",
-		req.Username, string(hashedPassword), req.Email,
-	)
+	user, err := s.db.CreateUser(req.Username, hashedPassword, req.Email, "user", false)
 	if err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
 		return
 	}
 
+	_ = s.db.LogAuditEvent(&user.ID, user.Username, "register", "auth", "User registered", c.ClientIP(), true)
+
 	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
 }
 
 func (s *Server) logout(c *gin.Context) {
+	username, _ := c.Get("username")
+	_ = s.db.LogAuditEvent(nil, fmt.Sprintf("%v", username), "logout", "auth", "User logged out", c.ClientIP(), true)
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+}
+
+func (s *Server) changePassword(c *gin.Context) {
+	var req ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := auth.ValidatePassword(req.NewPassword); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	username, _ := c.Get("username")
+	user, err := s.db.GetUserByUsername(fmt.Sprintf("%v", username))
+	if err != nil || user == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
+		return
+	}
+
+	if user.ID != userID.(int64) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+		return
+	}
+
+	if !auth.CheckPassword(req.CurrentPassword, user.PasswordHash) {
+		_ = s.db.LogAuditEvent(&user.ID, user.Username, "change_password", "auth", "Invalid current password", c.ClientIP(), false)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Current password is incorrect"})
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(req.NewPassword, s.config.BcryptCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
+	if err := s.db.UpdatePassword(user.ID, hashedPassword); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
+		return
+	}
+
+	_ = s.db.LogAuditEvent(&user.ID, user.Username, "change_password", "auth", "Password updated", c.ClientIP(), true)
+	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}
+
+func (s *Server) getProfile(c *gin.Context) {
+	username, _ := c.Get("username")
+	role, _ := c.Get("role")
+
+	user, err := s.db.GetUserByUsername(fmt.Sprintf("%v", username))
+	if err != nil || user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"username":             user.Username,
+		"email":                  user.Email,
+		"role":                   role,
+		"must_change_password": user.MustChangePassword,
+	})
 }
 
 func (s *Server) listContainers(c *gin.Context) {
@@ -198,27 +324,39 @@ func (s *Server) createContainer(c *gin.Context) {
 		hostConfig.Binds = binds
 	}
 
+	// Apply OPSEC security profile if specified
+	if req.SecurityProfile != "" {
+		profile := opsec.GetProfile(req.SecurityProfile)
+		if profile != nil {
+			opsec.ApplySecurityProfile(hostConfig, profile.SecurityLevel, profile)
+			config.Labels = map[string]string{
+				"cyber.opsec.profile": profile.ID,
+				"cyber.opsec.level":   string(profile.SecurityLevel),
+			}
+			scriptBinds := opsec.ScriptMountBinds()
+			hostConfig.Binds = append(hostConfig.Binds, scriptBinds...)
+		}
+	} else if req.SecurityLevel != "" {
+		opsec.ApplySecurityProfile(hostConfig, opsec.SecurityLevel(req.SecurityLevel), nil)
+	}
+
 	containerID, err := s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
 	if err != nil {
 		// Auto-pull image if not found locally
-		if strings.Contains(err.Error(), "No such image") {
-			pullReader, pullErr := s.dockerClient.PullImage(req.Image)
-			if pullErr != nil {
+		if isMissingImageError(err) {
+			if pullErr := s.dockerClient.EnsureImage(req.Image); pullErr != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to pull image %s: %v", req.Image, pullErr)})
 				return
 			}
-			// Drain the pull output stream to completion
-			io.Copy(io.Discard, pullReader)
-			pullReader.Close()
 
 			// Retry container creation after pull
 			containerID, err = s.dockerClient.CreateContainer(config, hostConfig, nil, req.Name)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": docker.FriendlyError(err)})
 				return
 			}
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": docker.FriendlyError(err)})
 			return
 		}
 	}
@@ -226,7 +364,7 @@ func (s *Server) createContainer(c *gin.Context) {
 	// Start the container after creation
 	err = s.dockerClient.StartContainer(containerID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Container created but failed to start: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": docker.FriendlyError(err)})
 		return
 	}
 
@@ -771,6 +909,23 @@ func (s *Server) authMiddleware() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			if username, exists := claims["username"]; exists {
+				c.Set("username", username)
+			}
+			if userID, exists := claims["user_id"]; exists {
+				switch v := userID.(type) {
+				case float64:
+					c.Set("user_id", int64(v))
+				case int64:
+					c.Set("user_id", v)
+				}
+			}
+			if role, exists := claims["role"]; exists {
+				c.Set("role", role)
+			}
 		}
 
 		c.Next()
