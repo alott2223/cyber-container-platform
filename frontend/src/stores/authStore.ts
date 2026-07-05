@@ -4,11 +4,12 @@ import { persist } from 'zustand/middleware'
 interface AuthState {
   isAuthenticated: boolean
   token: string | null
-  user: { username: string } | null
+  user: { username: string; role?: string; mustChangePassword?: boolean } | null
   isLoading: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => void
   setLoading: (loading: boolean) => void
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -37,19 +38,43 @@ export const useAuthStore = create<AuthState>()(
 
           const data = await response.json()
           
-          console.log('Login successful, setting auth state')
           set({
             isAuthenticated: true,
             token: data.token,
-            user: { username },
+            user: data.user || { username },
             isLoading: false,
           })
-          
-          console.log('After set - isAuthenticated:', get().isAuthenticated)
         } catch (error) {
           set({ isLoading: false })
           throw error
         }
+      },
+
+      changePassword: async (currentPassword: string, newPassword: string) => {
+        const token = get().token
+        const response = await fetch('/api/v1/auth/change-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword,
+          }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Failed to change password')
+        }
+
+        set({
+          user: {
+            ...get().user!,
+            mustChangePassword: false,
+          },
+        })
       },
 
       logout: () => {
