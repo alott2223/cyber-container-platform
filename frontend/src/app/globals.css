@@ -81,6 +81,14 @@
     opacity: 0.1;
   }
 
+  .workspace-tab-active {
+    @apply bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/30;
+  }
+
+  kbd {
+    @apply font-mono text-xs px-1 py-0.5 rounded border border-cyber-border bg-cyber-surface/50;
+  }
+
   .neon-text {
     text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
   }

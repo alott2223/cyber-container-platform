@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Menu, Bell, User, LogOut, Search } from 'lucide-react'
+import { Menu, Bell, User, LogOut, Search, Command } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { useDashboardStore } from '@/stores/dashboardStore'
 import { toast } from 'react-hot-toast'
 
 interface HeaderProps {
@@ -12,16 +13,18 @@ interface HeaderProps {
 export function Header({ onToggleSidebar }: HeaderProps) {
   const { user, logout } = useAuthStore()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const { setCommandPaletteOpen, globalSearch, setGlobalSearch } = useDashboardStore()
 
   const handleLogout = () => {
     logout()
     toast.success('Logged out successfully')
   }
 
+  const openPalette = () => setCommandPaletteOpen(true)
+
   return (
     <header className="bg-cyber-surface/80 backdrop-blur-sm border-b border-cyber-border px-6 py-4">
       <div className="flex items-center justify-between">
-        {/* Left Section */}
         <div className="flex items-center space-x-4">
           <button
             onClick={onToggleSidebar}
@@ -30,26 +33,48 @@ export function Header({ onToggleSidebar }: HeaderProps) {
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Search */}
-          <div className="relative">
+          <div className="relative group">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search containers, networks..."
-              className="cyber-input pl-10 w-80"
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              onFocus={openPalette}
+              onClick={openPalette}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || (e.ctrlKey && e.key === 'k')) {
+                  e.preventDefault()
+                  openPalette()
+                }
+              }}
+              className="cyber-input pl-10 pr-20 w-80 cursor-pointer"
+              readOnly
             />
+            <button
+              onClick={openPalette}
+              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1 text-xs text-gray-500 hover:text-cyber-accent transition-colors"
+            >
+              <Command className="w-3 h-3" />
+              <span className="hidden sm:inline">Ctrl+K</span>
+            </button>
           </div>
         </div>
 
-        {/* Right Section */}
         <div className="flex items-center space-x-4">
-          {/* Notifications */}
+          <button
+            onClick={openPalette}
+            className="p-2 hover:bg-cyber-surface/50 rounded-lg transition-colors"
+            title="Command palette (Ctrl+K)"
+          >
+            <Command className="w-5 h-5 text-cyber-accent" />
+          </button>
+
           <button className="p-2 hover:bg-cyber-surface/50 rounded-lg transition-colors relative">
             <Bell className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-cyber-error rounded-full"></span>
           </button>
 
-          {/* User Menu */}
           <div className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}

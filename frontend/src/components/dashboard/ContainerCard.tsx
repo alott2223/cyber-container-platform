@@ -11,10 +11,11 @@ interface ContainerCardProps {
   onRemove: () => void
   onShell?: () => void
   onOpenConsole?: () => void
+  onOpenLogs?: () => void
   isLoading: boolean
 }
 
-export function ContainerCard({ container, onStart, onStop, onRemove, onShell, onOpenConsole, isLoading }: ContainerCardProps) {
+export function ContainerCard({ container, onStart, onStop, onRemove, onShell, onOpenConsole, onOpenLogs, isLoading }: ContainerCardProps) {
   const [showMenu, setShowMenu] = useState(false)
 
   const getStatusColor = (state: string) => {
@@ -101,7 +102,10 @@ export function ContainerCard({ container, onStart, onStop, onRemove, onShell, o
                 <Terminal className="w-4 h-4" />
                 <span>Open Terminal</span>
               </button>
-              <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-cyber-surface/50 rounded transition-colors">
+              <button
+                onClick={() => { setShowMenu(false); onOpenLogs?.() }}
+                className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-cyber-surface/50 rounded transition-colors"
+              >
                 <ExternalLink className="w-4 h-4" />
                 <span>View Logs</span>
               </button>

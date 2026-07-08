@@ -40,9 +40,10 @@ export interface Container {
 interface ContainerListProps {
   onShellClick?: () => void
   onOpenConsole?: (container: Container) => void
+  onOpenLogs?: (container: Container) => void
 }
 
-export function ContainerList({ onShellClick, onOpenConsole }: ContainerListProps = {}) {
+export function ContainerList({ onShellClick, onOpenConsole, onOpenLogs }: ContainerListProps = {}) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -233,6 +234,7 @@ export function ContainerList({ onShellClick, onOpenConsole }: ContainerListProp
               onRemove={() => removeContainerMutation.mutate(container.id)}
               onShell={onShellClick}
               onOpenConsole={() => onOpenConsole?.(container)}
+              onOpenLogs={() => onOpenLogs?.(container)}
               isLoading={startContainerMutation.isLoading || stopContainerMutation.isLoading}
             />
           ))}

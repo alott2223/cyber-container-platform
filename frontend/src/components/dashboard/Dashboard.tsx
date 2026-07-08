@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { useAuthStore } from '@/stores/authStore'
+import { useDashboardStore } from '@/stores/dashboardStore'
 import { ContainerList } from './ContainerList'
 import { NetworkManager } from './NetworkManager'
 import { VolumeManager } from './VolumeManager'
@@ -18,25 +19,42 @@ import { ComposeManager } from './ComposeManager'
 import { RealTimeMonitor } from './RealTimeMonitor'
 import { ProcessManager } from './ProcessManager'
 import { OPSECManager } from './OPSECManager'
-import { ContainerConsole } from './ContainerConsole'
+import { ContainerWorkspace } from './ContainerWorkspace'
+import { CommandPalette } from './CommandPalette'
+import { DashboardOverview } from './DashboardOverview'
 import type { Container } from './ContainerList'
+import type { WorkspaceTab } from '@/stores/dashboardStore'
 
 export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'terminal' | 'metrics' | 'images' | 'files' | 'compose' | 'processes' | 'monitor' | 'system' | 'opsec' | 'settings'
 
 export function Dashboard() {
-  const [activeTab, setActiveTab] = useState<TabType>('containers')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [consoleContainer, setConsoleContainer] = useState<Container | null>(null)
   const { user } = useAuthStore()
+  const {
+    activeTab,
+    setActiveTab,
+    workspaceContainer,
+    workspaceTab,
+    openWorkspace,
+    closeWorkspace,
+  } = useDashboardStore()
+
+  const handleOpenWorkspace = (container: Container, tab: WorkspaceTab = 'terminal') => {
+    openWorkspace(container, tab)
+  }
 
   const renderContent = () => {
     switch (activeTab) {
       case 'containers':
         return (
-          <ContainerList
-            onShellClick={() => setActiveTab('terminal')}
-            onOpenConsole={(container) => setConsoleContainer(container)}
-          />
+          <>
+            <DashboardOverview />
+            <ContainerList
+              onShellClick={() => setActiveTab('terminal')}
+              onOpenConsole={(container) => handleOpenWorkspace(container, 'terminal')}
+              onOpenLogs={(container) => handleOpenWorkspace(container, 'logs')}
+            />
+          </>
         )
       case 'networks':
         return <NetworkManager />
@@ -65,13 +83,17 @@ export function Dashboard() {
       case 'settings':
         return <Settings />
       default:
-        return <ContainerList onShellClick={() => setActiveTab('terminal')} onOpenConsole={(c) => setConsoleContainer(c)} />
+        return (
+          <ContainerList
+            onShellClick={() => setActiveTab('terminal')}
+            onOpenConsole={(c) => handleOpenWorkspace(c, 'terminal')}
+          />
+        )
     }
   }
 
   return (
     <div className="min-h-screen bg-cyber-bg flex">
-      {/* Sidebar */}
       <Sidebar
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -79,12 +101,9 @@ export function Dashboard() {
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
 
-      {/* Main Content */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
-        {/* Header */}
         <Header onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-        {/* Content Area */}
         <main className="flex-1 p-6 overflow-auto cyber-scrollbar">
           {user?.mustChangePassword && (
             <div className="mb-4 p-4 rounded-lg border border-yellow-500/40 bg-yellow-500/10 text-yellow-100">
@@ -104,10 +123,13 @@ export function Dashboard() {
         </main>
       </div>
 
-      {consoleContainer && (
-        <ContainerConsole
-          container={consoleContainer}
-          onClose={() => setConsoleContainer(null)}
+      <CommandPalette />
+
+      {workspaceContainer && (
+        <ContainerWorkspace
+          container={workspaceContainer}
+          initialTab={workspaceTab}
+          onClose={closeWorkspace}
         />
       )}
     </div>

@@ -97,6 +97,8 @@ func (s *Server) setupRouter() {
 
 	// Interactive container shell (fullscreen terminal)
 	s.router.GET("/ws/containers/:id/exec", s.containerExecWS)
+	s.router.GET("/ws/containers/:id/logs", s.containerLogsWS)
+	s.router.GET("/ws/containers/:id/stats", s.containerStatsWS)
 
 	// API routes
 	api := s.router.Group("/api/v1")
