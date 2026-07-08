@@ -16,8 +16,12 @@ const nextConfig = {
         destination: 'http://localhost:8080/health',
       },
       {
+        source: '/ws/containers/:path*',
+        destination: 'http://localhost:8080/ws/containers/:path*',
+      },
+      {
         source: '/ws',
-        destination: 'http://localhost:8081/ws',
+        destination: 'http://localhost:8080/ws',
       },
     ]
   },

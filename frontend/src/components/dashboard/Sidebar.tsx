@@ -16,7 +16,8 @@ import {
   Folder,
   Layers,
   Cpu,
-  Monitor
+  Monitor,
+  Shield
 } from 'lucide-react'
 import { TabType } from './Dashboard'
 
@@ -39,6 +40,7 @@ const tabs = [
   { id: 'compose' as TabType, label: 'Compose', icon: Layers },
   { id: 'processes' as TabType, label: 'Processes', icon: Cpu },
   { id: 'monitor' as TabType, label: 'Monitor', icon: Monitor },
+  { id: 'opsec' as TabType, label: 'OPSEC', icon: Shield },
   { id: 'system' as TabType, label: 'System', icon: Activity },
   { id: 'settings' as TabType, label: 'Settings', icon: Settings },
 ]

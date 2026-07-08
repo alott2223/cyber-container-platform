@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Save, RefreshCw, Shield, Bell, Palette, Database } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { useAuthStore } from '@/stores/authStore'
 
 interface SettingsForm {
   theme: string
@@ -14,8 +15,16 @@ interface SettingsForm {
   timezone: string
 }
 
+interface PasswordForm {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
 export function Settings() {
   const [isSaving, setIsSaving] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const { changePassword, user } = useAuthStore()
   
   const {
     register,
@@ -31,6 +40,34 @@ export function Settings() {
       timezone: 'UTC',
     },
   })
+
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    reset: resetPasswordForm,
+    watch,
+    formState: { errors: passwordErrors },
+  } = useForm<PasswordForm>()
+
+  const newPassword = watch('newPassword')
+
+  const onPasswordSubmit = async (data: PasswordForm) => {
+    if (data.newPassword !== data.confirmPassword) {
+      toast.error('New passwords do not match')
+      return
+    }
+
+    setIsChangingPassword(true)
+    try {
+      await changePassword(data.currentPassword, data.newPassword)
+      resetPasswordForm()
+      toast.success('Password updated successfully')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to change password')
+    } finally {
+      setIsChangingPassword(false)
+    }
+  }
 
   const onSubmit = async (data: SettingsForm) => {
     setIsSaving(true)
@@ -201,6 +238,68 @@ export function Settings() {
             <Shield className="w-5 h-5 text-cyber-accent" />
             <h3 className="text-lg font-medium text-white">Security</h3>
           </div>
+
+          {user?.mustChangePassword && (
+            <div className="mb-4 p-3 rounded-lg border border-yellow-500/40 bg-yellow-500/10 text-yellow-200 text-sm">
+              You must change your password before continuing to use the platform in production.
+            </div>
+          )}
+
+          <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4 mb-6">
+            <h4 className="text-sm font-medium text-gray-300">Change Password</h4>
+            <div>
+              <label className="block text-sm font-medium text-cyber-accent mb-2">
+                Current Password
+              </label>
+              <input
+                {...registerPassword('currentPassword', { required: 'Current password is required' })}
+                type="password"
+                className="cyber-input w-full"
+              />
+              {passwordErrors.currentPassword && (
+                <p className="text-cyber-error text-sm mt-1">{passwordErrors.currentPassword.message}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-cyber-accent mb-2">
+                New Password
+              </label>
+              <input
+                {...registerPassword('newPassword', {
+                  required: 'New password is required',
+                  minLength: { value: 12, message: 'Password must be at least 12 characters' },
+                })}
+                type="password"
+                className="cyber-input w-full"
+              />
+              {passwordErrors.newPassword && (
+                <p className="text-cyber-error text-sm mt-1">{passwordErrors.newPassword.message}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-cyber-accent mb-2">
+                Confirm New Password
+              </label>
+              <input
+                {...registerPassword('confirmPassword', {
+                  required: 'Please confirm your password',
+                  validate: (value) => value === newPassword || 'Passwords do not match',
+                })}
+                type="password"
+                className="cyber-input w-full"
+              />
+              {passwordErrors.confirmPassword && (
+                <p className="text-cyber-error text-sm mt-1">{passwordErrors.confirmPassword.message}</p>
+              )}
+            </div>
+            <button
+              type="submit"
+              disabled={isChangingPassword}
+              className="cyber-button-primary disabled:opacity-50"
+            >
+              {isChangingPassword ? 'Updating...' : 'Update Password'}
+            </button>
+          </form>
           
           <div className="space-y-4">
             <div>
