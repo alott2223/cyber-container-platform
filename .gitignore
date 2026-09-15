@@ -107,6 +107,8 @@ certs/
 
 # Data directory
 data/
+!frontend/src/data/
+!frontend/src/data/templates.ts
 
 # Temporary files
 tmp/

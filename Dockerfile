@@ -11,15 +11,17 @@ RUN npm run build
 # Go backend stage
 FROM golang:1.24-alpine AS backend-builder
 
+RUN apk --no-cache add gcc musl-dev
+
 WORKDIR /app/backend
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 
 COPY backend/ ./
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=1 GOOS=linux go build -o main .
 
 # Final stage
-FROM alpine:latest
+FROM node:18-alpine
 
 RUN apk --no-cache add ca-certificates docker-cli
 WORKDIR /app
@@ -35,6 +37,6 @@ COPY --from=backend-builder /app/backend/main ./
 # Create data directory
 RUN mkdir -p /app/data
 
-EXPOSE 8080 8081
+EXPOSE 3000 8080 8081
 
-CMD ["./main"]
+CMD ["sh", "-c", "./main & exec env PORT=3000 node server.js"]
