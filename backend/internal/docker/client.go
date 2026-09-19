@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -87,7 +88,11 @@ type ImageInfo struct {
 }
 
 func NewClient() (*Client, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := client.NewClientWithOpts(
+		client.FromEnv,
+		client.WithAPIVersionNegotiation(),
+		client.WithVersion("1.44"),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Docker client: %w", err)
 	}
@@ -307,10 +312,40 @@ func (c *Client) PullImage(imageName string) (io.ReadCloser, error) {
 	return c.cli.ImagePull(context.Background(), imageName, options)
 }
 
+// EnsureImage pulls an image if missing and waits for the pull to complete
+func (c *Client) EnsureImage(imageName string) error {
+	reader, err := c.PullImage(imageName)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+	_, err = io.Copy(io.Discard, reader)
+	return err
+}
+
 // RemoveImage removes a Docker image
 func (c *Client) RemoveImage(imageID string) error {
 	_, err := c.cli.ImageRemove(context.Background(), imageID, types.ImageRemoveOptions{
 		Force: false,
 	})
 	return err
+}
+
+// Ping checks Docker daemon connectivity
+func (c *Client) Ping() error {
+	_, err := c.cli.Ping(context.Background())
+	return err
+}
+
+// FriendlyError returns a clearer message for common Docker environment issues
+func FriendlyError(err error) string {
+	if err == nil {
+		return ""
+	}
+	msg := err.Error()
+	if strings.Contains(msg, "overlay") && strings.Contains(strings.ToLower(msg), "invalid argument") {
+		return msg + " — Docker overlay mounts are not supported in this environment. " +
+			"Run: sudo ./scripts/fix-docker-overlay.sh (see docs/troubleshooting-docker.md)"
+	}
+	return msg
 }

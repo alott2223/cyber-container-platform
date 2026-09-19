@@ -124,7 +124,7 @@ jobs:
         sleep 30
         
         # Wait for services to be ready
-        timeout 60 bash -c 'until curl -f http://localhost:8080/api/v1/health; do sleep 2; done'
+        timeout 60 bash -c 'until curl -f http://localhost:8080/health; do sleep 2; done'
         timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
         
         # Run integration tests

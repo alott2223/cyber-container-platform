@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Play, Square, Trash2, Terminal, MoreVertical, ExternalLink } from 'lucide-react'
+import { Play, Square, Trash2, Terminal, MoreVertical, ExternalLink, Maximize2 } from 'lucide-react'
 import { Container } from './ContainerList'
 
 interface ContainerCardProps {
@@ -10,10 +10,12 @@ interface ContainerCardProps {
   onStop: () => void
   onRemove: () => void
   onShell?: () => void
+  onOpenConsole?: () => void
+  onOpenLogs?: () => void
   isLoading: boolean
 }
 
-export function ContainerCard({ container, onStart, onStop, onRemove, onShell, isLoading }: ContainerCardProps) {
+export function ContainerCard({ container, onStart, onStop, onRemove, onShell, onOpenConsole, onOpenLogs, isLoading }: ContainerCardProps) {
   const [showMenu, setShowMenu] = useState(false)
 
   const getStatusColor = (state: string) => {
@@ -81,6 +83,7 @@ export function ContainerCard({ container, onStart, onStop, onRemove, onShell, i
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
+            aria-label="Open container menu"
             className="p-1 hover:bg-cyber-surface/50 rounded transition-colors opacity-0 group-hover:opacity-100"
           >
             <MoreVertical className="w-4 h-4" />
@@ -88,11 +91,21 @@ export function ContainerCard({ container, onStart, onStop, onRemove, onShell, i
           
           {showMenu && (
             <div className="absolute right-0 top-full mt-1 w-48 cyber-card p-2 z-10">
+              <button
+                onClick={() => { setShowMenu(false); onOpenConsole?.() }}
+                className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-cyber-surface/50 rounded transition-colors"
+              >
+                <Maximize2 className="w-4 h-4" />
+                <span>Fullscreen Console</span>
+              </button>
               <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-cyber-surface/50 rounded transition-colors">
                 <Terminal className="w-4 h-4" />
                 <span>Open Terminal</span>
               </button>
-              <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-cyber-surface/50 rounded transition-colors">
+              <button
+                onClick={() => { setShowMenu(false); onOpenLogs?.() }}
+                className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-cyber-surface/50 rounded transition-colors"
+              >
                 <ExternalLink className="w-4 h-4" />
                 <span>View Logs</span>
               </button>
@@ -179,9 +192,17 @@ export function ContainerCard({ container, onStart, onStop, onRemove, onShell, i
         )}
         
         <button 
+          onClick={onOpenConsole}
+          disabled={container.state !== 'running'}
+          className="cyber-button disabled:opacity-30"
+          title="Fullscreen interactive console"
+        >
+          <Maximize2 className="w-4 h-4" />
+        </button>
+        <button 
           onClick={onShell}
           className="cyber-button"
-          title="Open terminal"
+          title="Open terminal tab"
         >
           <Terminal className="w-4 h-4" />
         </button>

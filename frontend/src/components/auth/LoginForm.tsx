@@ -137,18 +137,18 @@ export function LoginForm({ onLogin }: LoginFormProps) {
             </button>
           </form>
 
-          {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-cyber-surface/30 rounded-lg border border-cyber-border">
-            <p className="text-xs text-gray-400 mb-2">Demo Credentials:</p>
-            <p className="text-xs text-cyber-accent">Username: admin</p>
-            <p className="text-xs text-cyber-accent">Password: admin</p>
-          </div>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-6 p-4 bg-cyber-surface/30 rounded-lg border border-cyber-border">
+              <p className="text-xs text-gray-400 mb-2">Development mode:</p>
+              <p className="text-xs text-cyber-accent">Check server logs for auto-generated admin credentials on first run.</p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-xs text-gray-500">
-            © 2024 Cyber Container Platform. Built for privacy and performance.
+            © 2026 Cyber Container Platform. Built for privacy and performance.
           </p>
         </div>
       </div>

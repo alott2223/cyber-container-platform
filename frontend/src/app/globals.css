@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+@import '@xterm/xterm/css/xterm.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -78,6 +79,14 @@
     pointer-events: none;
     z-index: -1;
     opacity: 0.1;
+  }
+
+  .workspace-tab-active {
+    @apply bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/30;
+  }
+
+  kbd {
+    @apply font-mono text-xs px-1 py-0.5 rounded border border-cyber-border bg-cyber-surface/50;
   }
 
   .neon-text {
