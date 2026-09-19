@@ -87,7 +87,11 @@ type ImageInfo struct {
 }
 
 func NewClient() (*Client, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := client.NewClientWithOpts(
+		client.FromEnv,
+		client.WithAPIVersionNegotiation(),
+		client.WithVersion("1.44"),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Docker client: %w", err)
 	}
@@ -312,5 +316,11 @@ func (c *Client) RemoveImage(imageID string) error {
 	_, err := c.cli.ImageRemove(context.Background(), imageID, types.ImageRemoveOptions{
 		Force: false,
 	})
+	return err
+}
+
+// Ping checks Docker daemon connectivity
+func (c *Client) Ping() error {
+	_, err := c.cli.Ping(context.Background())
 	return err
 }

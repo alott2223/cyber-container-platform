@@ -81,6 +81,7 @@ export function ContainerCard({ container, onStart, onStop, onRemove, onShell, i
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
+            aria-label="Open container menu"
             className="p-1 hover:bg-cyber-surface/50 rounded transition-colors opacity-0 group-hover:opacity-100"
           >
             <MoreVertical className="w-4 h-4" />

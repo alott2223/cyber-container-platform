@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
+import { useAuthStore } from '@/stores/authStore'
 import { ContainerList } from './ContainerList'
 import { NetworkManager } from './NetworkManager'
 import { VolumeManager } from './VolumeManager'
@@ -22,6 +23,7 @@ export type TabType = 'containers' | 'networks' | 'volumes' | 'templates' | 'ter
 export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('containers')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const { user } = useAuthStore()
 
   const renderContent = () => {
     switch (activeTab) {
@@ -73,6 +75,20 @@ export function Dashboard() {
 
         {/* Content Area */}
         <main className="flex-1 p-6 overflow-auto cyber-scrollbar">
+          {user?.mustChangePassword && (
+            <div className="mb-4 p-4 rounded-lg border border-yellow-500/40 bg-yellow-500/10 text-yellow-100">
+              <p className="font-medium">Password change required</p>
+              <p className="text-sm mt-1 text-yellow-200/90">
+                For security, please update your default password in Settings before managing containers.
+              </p>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className="mt-3 cyber-button-primary text-sm"
+              >
+                Go to Settings
+              </button>
+            </div>
+          )}
           {renderContent()}
         </main>
       </div>
