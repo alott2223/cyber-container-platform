@@ -97,20 +97,25 @@ func (m *Metrics) UpdateSystemMetrics(connections int64, memory int64, cpu float
 func (m *Metrics) GetStats() map[string]interface{} {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	avgResponseTime := time.Duration(0)
 	if m.TotalRequests > 0 {
 		avgResponseTime = m.TotalResponseTime / time.Duration(m.TotalRequests)
 	}
-	
+
+	successRate := float64(0)
+	if m.TotalRequests > 0 {
+		successRate = float64(m.SuccessfulRequests) / float64(m.TotalRequests) * 100
+	}
+
 	uptime := time.Since(m.StartTime)
-	
+
 	return map[string]interface{}{
 		"requests": map[string]interface{}{
-			"total":      m.TotalRequests,
-			"successful": m.SuccessfulRequests,
-			"failed":     m.FailedRequests,
-			"success_rate": float64(m.SuccessfulRequests) / float64(m.TotalRequests) * 100,
+			"total":        m.TotalRequests,
+			"successful":   m.SuccessfulRequests,
+			"failed":       m.FailedRequests,
+			"success_rate": successRate,
 		},
 		"response_time": map[string]interface{}{
 			"average": avgResponseTime.String(),

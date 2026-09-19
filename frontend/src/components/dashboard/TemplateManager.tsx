@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from 'react-query'
 import { Play, BookOpen } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { containerTemplates, ContainerTemplate, getTemplatesByCategory } from '@/data/templates'
+import { containerTemplates, ContainerTemplate, getTemplatesByCategory } from '@/lib/templates'
 import { apiClient } from '@/lib/api'
 
 export function TemplateManager() {

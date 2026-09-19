@@ -155,39 +155,31 @@ func sanitizeString(input string) string {
 }
 
 // CORSMiddleware provides secure CORS configuration
-func CORSMiddleware() gin.HandlerFunc {
+func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
+	originSet := make(map[string]struct{}, len(allowedOrigins))
+	for _, origin := range allowedOrigins {
+		originSet[origin] = struct{}{}
+	}
+
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		
-		// Allow specific origins in production
-		allowedOrigins := []string{
-			"http://localhost:3000",
-			"https://localhost:3000",
-		}
-		
-		// Check if origin is allowed
-		allowed := false
-		for _, allowedOrigin := range allowedOrigins {
-			if origin == allowedOrigin {
-				allowed = true
-				break
+
+		if origin != "" {
+			if _, allowed := originSet[origin]; allowed {
+				c.Header("Access-Control-Allow-Origin", origin)
+				c.Header("Access-Control-Allow-Credentials", "true")
 			}
 		}
-		
-		if allowed {
-			c.Header("Access-Control-Allow-Origin", origin)
-		}
-		
+
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With")
-		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Max-Age", "86400")
-		
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
-		
+
 		c.Next()
 	}
 }
